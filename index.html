@@ -1024,7 +1024,6 @@
           </div>
         `;
         
-        // แนบ Event Listener โดยตรง ป้องกัน Syntax Error จาก String Parsing
         el.querySelector('.btn-edit-desc').addEventListener('click', () => {
             el.querySelector('.file-desc').focus();
         });
@@ -1048,7 +1047,11 @@
     }
 
     function updateEmptyState() {
-        if (selectedFiles.length > 0 || (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0)) {
+        let hasActiveDrafts = false;
+        if (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0) {
+            hasActiveDrafts = window.existingDraftFilesMeta.some(m => !m.deleted);
+        }
+        if (selectedFiles.length > 0 || hasActiveDrafts) {
             document.getElementById('emptyFileState').classList.add('hidden');
         } else {
             document.getElementById('emptyFileState').classList.remove('hidden');
@@ -1193,7 +1196,7 @@
                 const desc = fileDescriptions[f.id] || '-';
                 if (f.mimeType && f.mimeType.startsWith('image/')) {
                     attachmentsHtml += `
-                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                      <div class="a4-page">
                          <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount}</h3>
                          <img src="${f.base64}" class="attachment-img" />
                          <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
@@ -1201,11 +1204,11 @@
                     `;
                 } else if (f.mimeType && f.mimeType.includes('pdf')) {
                     attachmentsHtml += `
-                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                      <div class="a4-page">
                          <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF)</h3>
                          <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px; text-align: center;">
                             <h4 style="color:#555; font-size:18px;">📄 ${f.name}</h4>
-                            <p style="color:#888; font-size:14px;">(ไฟล์ PDF จะถูกบันทึกเข้าระบบพร้อมกับรายงานหลัก คุณไม่สามารถดูตัวอย่างได้ในหน้านี้)</p>
+                            <p style="color:#888; font-size:14px;">(ไฟล์ PDF จะถูกบันทึกเข้าระบบพร้อมกับรายงานหลัก ไม่สามารถแสดงรูปตัวอย่างก่อนพิมพ์ได้)</p>
                          </div>
                          <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
                       </div>
@@ -1215,34 +1218,38 @@
         } 
         // 2. หากไม่มีไฟล์ใหม่ แต่เป็นการแก้ไขร่างที่มีไฟล์อยู่แล้ว ให้ดึงรูป/PDF มาทำ Preview ด้วย
         else if (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0) {
-            window.existingDraftFilesMeta.forEach((meta) => {
+            window.existingDraftFilesMeta.forEach((meta, idx) => {
+                if(meta.deleted) return; // ข้ามไฟล์ที่ถูกลบทิ้งไปแล้ว
+                
+                // อัปเดตคำอธิบายล่าสุดจากช่องกรอก
+                const inputObj = document.querySelector(`input[data-draft-idx="${idx}"]`);
+                const currentDesc = inputObj ? inputObj.value.trim() : (meta.desc || '-');
+
                 imageCount++;
                 const isImg = meta.mimeType ? meta.mimeType.startsWith('image/') : true;
                 
                 if (isImg && meta.url) {
                     let imgUrl = meta.url;
-                    // แปลง URL ของ Google Drive ให้สามารถดึงมาโชว์ใน <img> ได้
+                    // เปลี่ยนจาก uc?id เป็น thumbnail เพื่อให้โหลดรูปภาพจาก Drive ได้เสถียรและพิมพ์ได้
                     const match = imgUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    if (match) imgUrl = `https://drive.google.com/uc?id=${match[1]}`;
+                    if (match) imgUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
                     
-                    const previewIframeUrl = meta.url.replace('/view?usp=drivesdk', '/preview').replace('/view', '/preview');
-
                     attachmentsHtml += `
-                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                      <div class="a4-page">
                          <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount} (บันทึกร่างไว้แล้ว)</h3>
-                         <img src="${imgUrl}" class="attachment-img" onerror="this.onerror=null; this.outerHTML='<iframe src=\\'${previewIframeUrl}\\' class=\\'attachment-img\\' style=\\'border:0; width:100%; height:200mm;\\'></iframe>';" />
-                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${meta.desc || '-'}</div>
+                         <img src="${imgUrl}" class="attachment-img" alt="ไม่สามารถแสดงรูปภาพได้ (ไฟล์อาจถูกตั้งค่าจำกัดสิทธิ์)" />
+                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${currentDesc}</div>
                       </div>
                     `;
                 } else {
                     attachmentsHtml += `
-                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                      <div class="a4-page">
                          <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF ฉบับร่าง)</h3>
                          <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px; text-align: center;">
                             <h4 style="color:#555; font-size:18px;">📄 ${meta.name || 'ไฟล์แนบเดิม'}</h4>
                             <p style="color:#888; font-size:14px;">(ไฟล์นี้จะถูกแนบพร้อมกับรายงานหลัก)</p>
                          </div>
-                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${meta.desc || '-'}</div>
+                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${currentDesc}</div>
                       </div>
                     `;
                 }
@@ -1259,42 +1266,42 @@
                 <style>
                   @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
                   @page { size: A4 portrait; margin: 0; }
-                  body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 12px; line-height: 1.3; color: #000; margin: 0; padding: 20px; background: transparent; display: flex; flex-direction: column; align-items: center; }
+                  body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 12px; line-height: 1.3; color: #000; margin: 0; padding: 20px; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 20px; }
                   
                   /* A4 Page Simulation */
-                  .a4-page { width: 210mm; min-height: 297mm; background: white; padding: 1.5cm; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); box-sizing: border-box; position: relative; page-break-after: always; }
-                  .a4-page:last-child { page-break-after: auto; margin-bottom: 0; }
+                  .a4-page { width: 210mm; min-height: 297mm; background: white; padding: 1.5cm; box-shadow: 0 4px 10px rgba(0,0,0,0.15); box-sizing: border-box; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
                   
                   .header-box { position: absolute; top: 1.5cm; right: 1.5cm; border: 1px solid #000; padding: 2px 10px; text-align: center; font-size: 10px; font-weight: bold; }
-                  .logo-container { text-align: center; margin-bottom: 5px; }
+                  .logo-container { text-align: center; margin-bottom: 5px; width: 100%; }
                   .logo-container img { width: 50px; height: 50px; opacity: 0.8; filter: grayscale(100%); }
-                  .title { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 10px; }
+                  .title { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 10px; width: 100%; }
                   .info-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 12px; border: none; }
-                  .info-table td { padding: 2px 0; border: none; vertical-align: bottom; }
+                  .info-table td { padding: 2px 0; border: none; vertical-align: bottom; text-align: left; }
                   .dot-field { border-bottom: 1px dotted #000; display: inline-block; padding: 0 5px; color: #000; }
                   .data-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
-                  .data-table th, .data-table td { border: 1px solid #000; padding: 3px 4px; }
+                  .data-table th, .data-table td { border: 1px solid #000; padding: 3px 4px; text-align: left; }
                   .data-table th { text-align: center; background-color: #f9f9f9; font-weight: bold; }
-                  .bottom-section { font-size: 12px; margin-bottom: 6px; }
+                  .bottom-section { font-size: 12px; margin-bottom: 6px; width: 100%; text-align: left; }
                   .long-dot { border-bottom: 1px dotted #000; min-height: 16px; display: inline-block; width: 100%; margin-top: 2px; }
                   .sig-table { width: 100%; margin-top: 15px; text-align: center; border: none; font-size: 12px; }
                   .sig-table td { width: 50%; padding: 2px; border: none; }
-                  .remark-text { margin-top: 10px; font-weight: bold; font-size: 10px; text-align: center; }
+                  .remark-text { margin-top: 10px; font-weight: bold; font-size: 10px; text-align: center; width: 100%; }
                   
                   /* Attachment specific styles */
                   .attachment-title { font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 20px; color: #1f2937; text-align: center; width: 100%; }
-                  .attachment-img { max-width: 100%; max-height: 200mm; object-fit: contain; border: 2px solid #e5e7eb; border-radius: 8px; padding: 5px; margin-bottom: 20px; }
+                  .attachment-img { max-width: 100%; max-height: 180mm; width: auto; object-fit: contain; border: 2px solid #e5e7eb; border-radius: 8px; padding: 5px; margin: 0 auto 20px auto; display: block; }
                   .attachment-desc { font-size: 14px; text-align: left; background: #f0f9ff; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #0284c7; width: 90%; box-sizing: border-box; color: #0f172a; margin-top: auto; }
                   
                   @media print {
-                      body { background: white; padding: 0; display: block; }
-                      .a4-page { margin: 0; box-shadow: none; border: none; padding: 1.5cm; width: auto; min-height: auto; }
+                      body { background: white; padding: 0; display: block; gap: 0; }
+                      .a4-page { margin: 0; box-shadow: none; border: none; padding: 1.5cm; width: auto; min-height: auto; page-break-after: always; display: block; }
+                      .a4-page:last-child { page-break-after: auto; }
                       .header-box { top: 1.5cm; right: 1.5cm; }
                   }
                 </style>
               </head>
               <body>
-                <div class="a4-page">
+                <div class="a4-page" style="display: block;">
                     <div class="header-box">ฟอร์ม วพช.002<br>Rev.01 (121167)</div>
                     <div class="logo-container">
                        <img src="https://img2.pic.in.th/Screenshot-2026-04-16-at-19.59.46.png">
@@ -1432,14 +1439,21 @@
           }
       });
 
-      // จัดเก็บข้อมูล Meta ของไฟล์เพื่อเวลาดึง Draft กลับมาจะได้มีข้อมูลคำอธิบายด้วย
-      const savedFilesMeta = selectedFiles.map(f => ({
-          id: f.id,
-          name: f.name,
-          mimeType: f.mimeType,
-          desc: fileDescriptions[f.id] || ''
-      }));
-      const finalFilesMeta = (selectedFiles.length > 0) ? savedFilesMeta : (window.existingDraftFilesMeta || []);
+      // รวบรวมข้อมูล Meta ของไฟล์ทั้งหมด
+      let finalFilesMeta = [];
+      if (selectedFiles.length > 0) {
+          finalFilesMeta = selectedFiles.map(f => ({
+              id: f.id, name: f.name, mimeType: f.mimeType, desc: fileDescriptions[f.id] || ''
+          }));
+      } else if (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0) {
+          // เก็บเฉพาะไฟล์ร่างที่ยังไม่โดนกดลบ และอัปเดตคำอธิบายล่าสุด
+          window.existingDraftFilesMeta.forEach((meta, idx) => {
+              if (meta.deleted) return;
+              const inputObj = document.querySelector(`input[data-draft-idx="${idx}"]`);
+              if (inputObj) meta.desc = inputObj.value.trim();
+              finalFilesMeta.push(meta);
+          });
+      }
 
       const reportData = {
         report_id: currentEditReportId,
@@ -1448,7 +1462,7 @@
         inspiration: document.getElementById('repInspiration').value.trim(),
         obstacle: document.getElementById('repObstacle').value.trim(),
         activities: activities,
-        saved_files_meta: finalFilesMeta // ถูกบันทึกลงในฐานข้อมูล (activity_json)
+        saved_files_meta: finalFilesMeta 
       };
 
       showLoader(isDraft ? 'กำลังบันทึกแบบร่าง...' : 'กำลังประมวลผล... จัดเรียงหน้ากระดาษ A4');
@@ -1471,7 +1485,7 @@
       } catch (error) {
         const errorMsg = error.message.toLowerCase();
         if (errorMsg.includes('load failed') || errorMsg.includes('fetch') || errorMsg.includes('network')) {
-            showToast('สำเร็จ', isDraft ? 'บันึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
+            showToast('สำเร็จ', isDraft ? 'บันทึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
             cachedDashboardData = cachedReportsData = null;
             clearDraft();
             navigateTo('historyView');
@@ -1588,7 +1602,6 @@
 
        const parsedJson = reportData.activity_json || {};
        
-       // ดักจับและแปลงรูปแบบวันที่ให้ถูกต้อง (ป้องกัน ISO Date)
        let safeMonth = parsedJson.month || reportData.month || '';
        if (safeMonth) {
            const match = String(safeMonth).match(/^(\d{4})-(\d{2})/);
@@ -1653,7 +1666,7 @@
            }
        }
        
-       // ดึงลิงก์ไฟล์ของจริงเพื่อนำไปโชว์ใน Print Preview
+       // ดึงลิงก์ไฟล์ของจริงเพื่อนำไปโชว์ใน Print Preview และ UI แก้ไข
        let existingUrls = [];
        const possibleKeys = ['fileUrls', 'file_urls', 'file_url', 'fileurls', 'files'];
        for (let key of possibleKeys) {
@@ -1669,31 +1682,55 @@
        });
 
        if (window.existingDraftFilesMeta.length > 0) {
-           window.existingDraftFilesMeta.forEach((meta) => {
+           window.existingDraftFilesMeta.forEach((meta, idx) => {
                const el = document.createElement('div');
-               el.className = "flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm";
+               el.id = `draft_file_${idx}`;
+               el.className = "flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:border-sky-300 transition-all duration-300 group";
                
-               let thumb = `<div class="w-16 h-16 flex items-center justify-center bg-amber-100 rounded-xl flex-shrink-0"><i class="ph-fill ph-file text-3xl text-amber-600"></i></div>`;
+               let thumb = `<div class="w-24 h-24 flex items-center justify-center bg-amber-50 rounded-xl border border-amber-100 flex-shrink-0 shadow-sm"><i class="ph-fill ph-file text-5xl text-amber-500"></i></div>`;
                if (meta.url) {
                    let imgUrl = meta.url;
-                   // แปลงลิงก์ Drive ให้รองรับการดึงรูปภาพแบบ Thumbnail
+                   // เปลี่ยนจาก uc?id เป็น thumbnail เพื่อให้โชว์รูปได้แน่นอน
                    const match = imgUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                    if (match) {
-                       imgUrl = `https://drive.google.com/uc?id=${match[1]}`;
+                       imgUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
                    }
                    if (meta.mimeType && meta.mimeType.startsWith('image/')) {
-                       thumb = `<img src="${imgUrl}" class="w-16 h-16 object-cover rounded-xl border border-gray-200" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-16 h-16 flex items-center justify-center bg-amber-100 rounded-xl flex-shrink-0\\'><i class=\\'ph-fill ph-file text-3xl text-amber-600\\'></i></div>';">`;
+                       thumb = `<img src="${imgUrl}" class="w-24 h-24 object-cover rounded-xl border border-gray-100 shadow-sm flex-shrink-0 cursor-pointer" onclick="window.open('${meta.url}')" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-24 h-24 flex items-center justify-center bg-amber-50 rounded-xl border border-amber-100 flex-shrink-0 shadow-sm\\'><i class=\\'ph-fill ph-file text-5xl text-amber-500\\'></i></div>';">`;
                    }
                }
 
                el.innerHTML = `
                    ${thumb}
-                   <div class="flex-1 min-w-0 w-full">
-                       <p class="text-sm font-bold text-gray-800 truncate pr-2">${meta.name || 'ไฟล์แนบเดิม'}</p>
-                       <p class="text-xs text-gray-500 mt-1"><b class="text-gray-700">คำอธิบาย:</b> ${meta.desc || '-'}</p>
+                   <div class="flex-1 w-full min-w-0 flex flex-col justify-center h-full">
+                       <div class="flex justify-between items-start mb-3">
+                           <p class="text-sm font-bold text-gray-800 truncate pr-2" title="${meta.name}">${meta.name || 'ไฟล์แนบเดิม'}</p>
+                           <span class="text-[10px] font-bold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">ไฟล์ร่าง</span>
+                       </div>
+                       <div class="relative w-full">
+                           <i class="ph-fill ph-chat-text absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400 text-lg"></i>
+                           <input type="text" class="file-desc-draft w-full border border-gray-300 bg-gray-50 rounded-xl text-sm py-2.5 pl-11 pr-4 outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-50 transition-all placeholder-gray-400 font-medium" placeholder="เพิ่มคำอธิบายรูปภาพ/ไฟล์นี้..." data-draft-idx="${idx}" value="${meta.desc || ''}">
+                       </div>
                    </div>
-                   <div class="text-[10px] sm:text-xs text-amber-600 font-bold bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 flex-shrink-0 mt-2 sm:mt-0">ไฟล์ถูกบันทึกร่างไว้แล้ว</div>
+                   <div class="flex sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                       <button type="button" class="btn-edit-desc flex-1 sm:flex-none text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-100 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"><i class="ph-fill ph-pencil-simple text-base"></i> แก้ไขคำอธิบาย</button>
+                       <button type="button" class="btn-delete-file flex-1 sm:flex-none text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"><i class="ph-fill ph-trash text-base"></i> ลบไฟล์ทิ้ง</button>
+                   </div>
                `;
+               
+               // ผูก Event ปุ่มกดให้กับไฟล์ร่าง
+               el.querySelector('.btn-edit-desc').addEventListener('click', () => {
+                   el.querySelector('.file-desc-draft').focus();
+               });
+               el.querySelector('.btn-delete-file').addEventListener('click', () => {
+                   el.classList.add('opacity-0', 'scale-95'); 
+                   setTimeout(() => {
+                       el.remove();
+                       window.existingDraftFilesMeta[idx].deleted = true; // ทำสัญลักษณ์ว่าถูกลบแล้ว
+                       updateEmptyState();
+                   }, 300); 
+               });
+
                document.getElementById('filePreviewArea').appendChild(el);
            });
            document.getElementById('emptyFileState').classList.add('hidden');
