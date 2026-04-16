@@ -687,8 +687,8 @@
               </div>
             </div>
             <div class="flex-1 overflow-auto p-4 flex justify-center bg-gray-200">
-               <div id="previewIframeContainer" class="bg-white shadow-lg w-full max-w-[210mm] min-h-[297mm]">
-                  <iframe id="previewIframe" class="w-full h-full border-0 pointer-events-none" style="min-h: 297mm;"></iframe>
+               <div id="previewIframeContainer" class="w-full max-w-[240mm] h-full">
+                  <iframe id="previewIframe" class="w-full h-full border-0 bg-transparent"></iframe>
                </div>
             </div>
           </div>
@@ -1186,15 +1186,14 @@
         let attachmentsHtml = '';
         let imageCount = 0;
         
-        // 1. นำไฟล์ใหม่มาทำ Preview
+        // 1. นำไฟล์ใหม่มาทำ Preview จัดลง A4
         if (selectedFiles && selectedFiles.length > 0) {
             selectedFiles.forEach((f) => {
                 imageCount++;
                 const desc = fileDescriptions[f.id] || '-';
                 if (f.mimeType && f.mimeType.startsWith('image/')) {
                     attachmentsHtml += `
-                      <div class="page-break"></div>
-                      <div class="attachment-container">
+                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
                          <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount}</h3>
                          <img src="${f.base64}" class="attachment-img" />
                          <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
@@ -1202,12 +1201,11 @@
                     `;
                 } else if (f.mimeType && f.mimeType.includes('pdf')) {
                     attachmentsHtml += `
-                      <div class="page-break"></div>
-                      <div class="attachment-container">
+                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
                          <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF)</h3>
-                         <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px;">
+                         <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px; text-align: center;">
                             <h4 style="color:#555; font-size:18px;">📄 ${f.name}</h4>
-                            <p style="color:#888; font-size:14px;">(ไฟล์ PDF จะถูกบันทึกเข้าระบบพร้อมกับรายงานหลัก)</p>
+                            <p style="color:#888; font-size:14px;">(ไฟล์ PDF จะถูกบันทึกเข้าระบบพร้อมกับรายงานหลัก คุณไม่สามารถดูตัวอย่างได้ในหน้านี้)</p>
                          </div>
                          <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
                       </div>
@@ -1215,34 +1213,59 @@
                 }
             });
         } 
-        // 2. หากไม่มีไฟล์ใหม่ แต่เป็นการแก้ไขร่างที่มีไฟล์อยู่แล้ว
+        // 2. หากไม่มีไฟล์ใหม่ แต่เป็นการแก้ไขร่างที่มีไฟล์อยู่แล้ว ให้ดึงรูป/PDF มาทำ Preview ด้วย
         else if (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0) {
             window.existingDraftFilesMeta.forEach((meta) => {
                 imageCount++;
-                attachmentsHtml += `
-                  <div class="page-break"></div>
-                  <div class="attachment-container">
-                     <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (บันทึกร่างไว้แล้ว)</h3>
-                     <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px;">
-                        <h4 style="color:#555; font-size:18px;">📄 ${meta.name || 'ไฟล์แนบเดิม'}</h4>
-                     </div>
-                     <div class="attachment-desc"><b>คำอธิบาย:</b> ${meta.desc || '-'}</div>
-                  </div>
-                `;
+                const isImg = meta.mimeType ? meta.mimeType.startsWith('image/') : true;
+                
+                if (isImg && meta.url) {
+                    let imgUrl = meta.url;
+                    // แปลง URL ของ Google Drive ให้สามารถดึงมาโชว์ใน <img> ได้
+                    const match = imgUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) imgUrl = `https://drive.google.com/uc?id=${match[1]}`;
+                    
+                    const previewIframeUrl = meta.url.replace('/view?usp=drivesdk', '/preview').replace('/view', '/preview');
+
+                    attachmentsHtml += `
+                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                         <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount} (บันทึกร่างไว้แล้ว)</h3>
+                         <img src="${imgUrl}" class="attachment-img" onerror="this.onerror=null; this.outerHTML='<iframe src=\\'${previewIframeUrl}\\' class=\\'attachment-img\\' style=\\'border:0; width:100%; height:200mm;\\'></iframe>';" />
+                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${meta.desc || '-'}</div>
+                      </div>
+                    `;
+                } else {
+                    attachmentsHtml += `
+                      <div class="a4-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                         <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF ฉบับร่าง)</h3>
+                         <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px; text-align: center;">
+                            <h4 style="color:#555; font-size:18px;">📄 ${meta.name || 'ไฟล์แนบเดิม'}</h4>
+                            <p style="color:#888; font-size:14px;">(ไฟล์นี้จะถูกแนบพร้อมกับรายงานหลัก)</p>
+                         </div>
+                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${meta.desc || '-'}</div>
+                      </div>
+                    `;
+                }
             });
         }
 
         const dDateObj = dateVal ? new Date(dateVal) : new Date();
 
         const htmlContent = `
+            <!DOCTYPE html>
             <html>
               <head>
                 <meta charset="UTF-8">
                 <style>
                   @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-                  @page { size: A4 portrait; margin: 1cm; }
-                  body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 12px; line-height: 1.2; color: #000; margin: 0; padding: 1cm; box-sizing: border-box; }
-                  .header-box { position: absolute; top: 1cm; right: 1cm; border: 1px solid #000; padding: 2px 10px; text-align: center; font-size: 10px; font-weight: bold; }
+                  @page { size: A4 portrait; margin: 0; }
+                  body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 12px; line-height: 1.3; color: #000; margin: 0; padding: 20px; background: transparent; display: flex; flex-direction: column; align-items: center; }
+                  
+                  /* A4 Page Simulation */
+                  .a4-page { width: 210mm; min-height: 297mm; background: white; padding: 1.5cm; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); box-sizing: border-box; position: relative; page-break-after: always; }
+                  .a4-page:last-child { page-break-after: auto; margin-bottom: 0; }
+                  
+                  .header-box { position: absolute; top: 1.5cm; right: 1.5cm; border: 1px solid #000; padding: 2px 10px; text-align: center; font-size: 10px; font-weight: bold; }
                   .logo-container { text-align: center; margin-bottom: 5px; }
                   .logo-container img { width: 50px; height: 50px; opacity: 0.8; filter: grayscale(100%); }
                   .title { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 10px; }
@@ -1257,96 +1280,98 @@
                   .sig-table { width: 100%; margin-top: 15px; text-align: center; border: none; font-size: 12px; }
                   .sig-table td { width: 50%; padding: 2px; border: none; }
                   .remark-text { margin-top: 10px; font-weight: bold; font-size: 10px; text-align: center; }
-                  .page-break { page-break-before: always; }
-                  .attachment-container { width: 100%; height: 95%; text-align: center; padding-top: 20px; box-sizing: border-box; }
-                  .attachment-title { font-size: 16px; font-weight: bold; text-decoration: underline; margin-bottom: 20px; color: #333; }
-                  .attachment-img { max-width: 90%; max-height: 600px; object-fit: contain; border: 1px solid #ccc; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); border-radius: 4px; margin-bottom: 15px; }
-                  .attachment-desc { font-size: 14px; text-align: left; background: #f1f5f9; padding: 10px 15px; border-radius: 8px; border-left: 4px solid #0284c7; width: 85%; margin: 0 auto; word-wrap: break-word; }
+                  
+                  /* Attachment specific styles */
+                  .attachment-title { font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 20px; color: #1f2937; text-align: center; width: 100%; }
+                  .attachment-img { max-width: 100%; max-height: 200mm; object-fit: contain; border: 2px solid #e5e7eb; border-radius: 8px; padding: 5px; margin-bottom: 20px; }
+                  .attachment-desc { font-size: 14px; text-align: left; background: #f0f9ff; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #0284c7; width: 90%; box-sizing: border-box; color: #0f172a; margin-top: auto; }
+                  
                   @media print {
-                      body { padding: 0; }
-                      .header-box { top: 0; right: 0; }
+                      body { background: white; padding: 0; display: block; }
+                      .a4-page { margin: 0; box-shadow: none; border: none; padding: 1.5cm; width: auto; min-height: auto; }
+                      .header-box { top: 1.5cm; right: 1.5cm; }
                   }
                 </style>
               </head>
               <body>
-                <div style="position: relative;">
+                <div class="a4-page">
                     <div class="header-box">ฟอร์ม วพช.002<br>Rev.01 (121167)</div>
                     <div class="logo-container">
                        <img src="https://img2.pic.in.th/Screenshot-2026-04-16-at-19.59.46.png">
                     </div>
-                </div>
-                <div class="title">แบบรายงานผลการปฏิบัติงาน อสม.วิทยาศาสตร์การแพทย์ชุมชน (ใบงาน 1 ป)</div>
-                <table class="info-table">
-                  <tr>
-                    <td style="width: 50%;"><b>ประจำเดือน</b> <span class="dot-field" style="width: 200px;">${formattedMonth}</span></td>
-                    <td style="width: 50%;"><b>วันที่</b> <span class="dot-field" style="width: 200px;">${formattedDate}</span></td>
-                  </tr>
-                  <tr>
-                    <td><b>ชื่อ-สกุล</b> <span class="dot-field" style="width: 220px;">${currentUser.fullname}</span></td>
-                    <td><b>สังกัด (รพ.สต./สอน./PCU/อื่นๆ)</b> <span class="dot-field" style="width: 150px;">${currentUser.hoscode}</span></td>
-                  </tr>
-                  <tr>
-                    <td colspan="2">
-                      <b>ตำบล</b> <span class="dot-field" style="width: 150px;">${currentUser.subdistrict}</span>
-                      <b>อำเภอ</b> <span class="dot-field" style="width: 150px;">${currentUser.district}</span>
-                      <b>จังหวัด</b> <span class="dot-field" style="width: 150px;">${currentUser.province}</span>
-                    </td>
-                  </tr>
-                </table>
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th rowspan="2" style="width:23%;">กิจกรรมการปฏิบัติงาน<br>ตามบทบาท 1ป2ส</th>
-                      <th rowspan="2" style="width:25%;">ผลงาน<br>(จำนวนตัวอย่าง ชื่อตัวอย่าง)</th>
-                      <th colspan="3">เครื่องมือที่ใช้ (กา ☑ หน้าข้อที่ได้ปฏิบัติ)</th>
-                    </tr>
-                    <tr>
-                      <th style="width:10%;">กรมวิทย์<br>With you</th>
-                      <th style="width:10%;">Fda อย.</th>
-                      <th style="width:32%;">ชุดทดสอบที่ได้ใช้</th>
-                    </tr>
-                    <tr>
-                      <th colspan="5" style="text-align:left; font-weight:bold; background:#f0f0f0;">1ป: ป้องกันพิษอันตรายต่อชุมชน เฝ้าระวังความเสี่ยงต่อสุขภาพของคนในชุมชน</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td style="vertical-align:top;">1. ตรวจยา</td><td style="vertical-align:top;">${getResult('row1')}</td>${getChecks('row1')}${getToolsStr('row1', 1)}</tr>
-                    <tr><td style="vertical-align:top;">2. ตรวจอาหาร</td><td style="vertical-align:top;">${getResult('row2')}</td>${getChecks('row2')}${getToolsStr('row2', 2)}</tr>
-                    <tr><td style="vertical-align:top;">3. ตรวจเครื่องสำอาง</td><td style="vertical-align:top;">${getResult('row3')}</td>${getChecks('row3')}${getToolsStr('row3', 3)}</tr>
-                    <tr><td style="vertical-align:top;">4. ตรวจยาเสพติดในปัสสาวะ</td><td style="vertical-align:top;">${getResult('row4')}</td>${getChecks('row4')}${getToolsStr('row4', 4)}</tr>
-                    <tr><td style="vertical-align:top;">5. การตรวจคัดกรองโรค</td><td style="vertical-align:top;">${getResult('row5')}</td>${getChecks('row5')}${getToolsStr('row5', 5)}</tr>
-                    <tr><td style="vertical-align:top;">6. อื่นๆ</td><td style="vertical-align:top;">${getResult('row6')}</td>${getChecks('row6')}${getToolsStr('row6', 6)}</tr>
-                  </tbody>
-                </table>
-                <div class="bottom-section">
-                  <b>แรงบันดาลใจ/ปัจจัยที่ทำให้สำเร็จ:</b>
-                  <div class="long-dot">${inspiration}</div>
-                  <div class="long-dot"></div>
-                </div>
-                <div class="bottom-section">
-                  <b>ปัญหา/อุปสรรค ที่พบในระหว่างการปฏิบัติงาน:</b>
-                  <div class="long-dot">${obstacle}</div>
-                </div>
-                <div class="bottom-section">
-                  <u>หมายเหตุ</u>: มีเอกสารแนบเพิ่มเติม หรือภาพประกอบ จำนวน <span class="dot-field" style="width: 50px; text-align: center;">${imageCount}</span> หน้า (ถ้ามี)
-                </div>
-                <table class="sig-table">
-                  <tr>
-                    <td>
-                       ลงชื่อ .................................................... อสม.<br>
-                       ( ${currentUser.fullname} )<br>
-                       วันที่ <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getDate()}</span> / <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getMonth()+1}</span> / <span class="dot-field" style="width:40px; text-align:center;">${dDateObj.getFullYear()+543}</span>
-                    </td>
-                    <td>
-                       ลงชื่อ .................................................... เจ้าหน้าที่ผู้รับผิดชอบ<br>
-                       ( .................................................... )<br>
-                       ตำแหน่ง ....................................................<br>
-                       วันที่ ............ / ............ / ............
-                    </td>
-                  </tr>
-                </table>
-                <div class="remark-text">
-                   *** หมายเหตุ ใบงานนี้ เป็นหลักฐานส่วนสำคัญส่วนหนึ่งสำหรับการประเมินความสามารถ อสม.วิทยาศาสตร์การแพทย์ชุมชน ขั้นที่ 2
+                    <div class="title">แบบรายงานผลการปฏิบัติงาน อสม.วิทยาศาสตร์การแพทย์ชุมชน (ใบงาน 1 ป)</div>
+                    <table class="info-table">
+                      <tr>
+                        <td style="width: 50%;"><b>ประจำเดือน</b> <span class="dot-field" style="width: 200px;">${formattedMonth}</span></td>
+                        <td style="width: 50%;"><b>วันที่</b> <span class="dot-field" style="width: 200px;">${formattedDate}</span></td>
+                      </tr>
+                      <tr>
+                        <td><b>ชื่อ-สกุล</b> <span class="dot-field" style="width: 220px;">${currentUser.fullname}</span></td>
+                        <td><b>สังกัด (รพ.สต./สอน./PCU/อื่นๆ)</b> <span class="dot-field" style="width: 150px;">${currentUser.hoscode}</span></td>
+                      </tr>
+                      <tr>
+                        <td colspan="2">
+                          <b>ตำบล</b> <span class="dot-field" style="width: 150px;">${currentUser.subdistrict}</span>
+                          <b>อำเภอ</b> <span class="dot-field" style="width: 150px;">${currentUser.district}</span>
+                          <b>จังหวัด</b> <span class="dot-field" style="width: 150px;">${currentUser.province}</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th rowspan="2" style="width:23%;">กิจกรรมการปฏิบัติงาน<br>ตามบทบาท 1ป2ส</th>
+                          <th rowspan="2" style="width:25%;">ผลงาน<br>(จำนวนตัวอย่าง ชื่อตัวอย่าง)</th>
+                          <th colspan="3">เครื่องมือที่ใช้ (กา ☑ หน้าข้อที่ได้ปฏิบัติ)</th>
+                        </tr>
+                        <tr>
+                          <th style="width:10%;">กรมวิทย์<br>With you</th>
+                          <th style="width:10%;">Fda อย.</th>
+                          <th style="width:32%;">ชุดทดสอบที่ได้ใช้</th>
+                        </tr>
+                        <tr>
+                          <th colspan="5" style="text-align:left; font-weight:bold; background:#f0f0f0;">1ป: ป้องกันพิษอันตรายต่อชุมชน เฝ้าระวังความเสี่ยงต่อสุขภาพของคนในชุมชน</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td style="vertical-align:top;">1. ตรวจยา</td><td style="vertical-align:top;">${getResult('row1')}</td>${getChecks('row1')}${getToolsStr('row1', 1)}</tr>
+                        <tr><td style="vertical-align:top;">2. ตรวจอาหาร</td><td style="vertical-align:top;">${getResult('row2')}</td>${getChecks('row2')}${getToolsStr('row2', 2)}</tr>
+                        <tr><td style="vertical-align:top;">3. ตรวจเครื่องสำอาง</td><td style="vertical-align:top;">${getResult('row3')}</td>${getChecks('row3')}${getToolsStr('row3', 3)}</tr>
+                        <tr><td style="vertical-align:top;">4. ตรวจยาเสพติดในปัสสาวะ</td><td style="vertical-align:top;">${getResult('row4')}</td>${getChecks('row4')}${getToolsStr('row4', 4)}</tr>
+                        <tr><td style="vertical-align:top;">5. การตรวจคัดกรองโรค</td><td style="vertical-align:top;">${getResult('row5')}</td>${getChecks('row5')}${getToolsStr('row5', 5)}</tr>
+                        <tr><td style="vertical-align:top;">6. อื่นๆ</td><td style="vertical-align:top;">${getResult('row6')}</td>${getChecks('row6')}${getToolsStr('row6', 6)}</tr>
+                      </tbody>
+                    </table>
+                    <div class="bottom-section">
+                      <b>แรงบันดาลใจ/ปัจจัยที่ทำให้สำเร็จ:</b>
+                      <div class="long-dot">${inspiration}</div>
+                      <div class="long-dot"></div>
+                    </div>
+                    <div class="bottom-section">
+                      <b>ปัญหา/อุปสรรค ที่พบในระหว่างการปฏิบัติงาน:</b>
+                      <div class="long-dot">${obstacle}</div>
+                    </div>
+                    <div class="bottom-section">
+                      <u>หมายเหตุ</u>: มีเอกสารแนบเพิ่มเติม หรือภาพประกอบ จำนวน <span class="dot-field" style="width: 50px; text-align: center;">${imageCount}</span> หน้า (ถ้ามี)
+                    </div>
+                    <table class="sig-table">
+                      <tr>
+                        <td>
+                           ลงชื่อ .................................................... อสม.<br>
+                           ( ${currentUser.fullname} )<br>
+                           วันที่ <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getDate()}</span> / <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getMonth()+1}</span> / <span class="dot-field" style="width:40px; text-align:center;">${dDateObj.getFullYear()+543}</span>
+                        </td>
+                        <td>
+                           ลงชื่อ .................................................... เจ้าหน้าที่ผู้รับผิดชอบ<br>
+                           ( .................................................... )<br>
+                           ตำแหน่ง ....................................................<br>
+                           วันที่ ............ / ............ / ............
+                        </td>
+                      </tr>
+                    </table>
+                    <div class="remark-text">
+                       *** หมายเหตุ ใบงานนี้ เป็นหลักฐานส่วนสำคัญส่วนหนึ่งสำหรับการประเมินความสามารถ อสม.วิทยาศาสตร์การแพทย์ชุมชน ขั้นที่ 2
+                    </div>
                 </div>
                 ${attachmentsHtml}
               </body>
@@ -1563,32 +1588,34 @@
 
        const parsedJson = reportData.activity_json || {};
        
+       // ดักจับและแปลงรูปแบบวันที่ให้ถูกต้อง (ป้องกัน ISO Date)
        let safeMonth = parsedJson.month || reportData.month || '';
-       if (String(safeMonth).includes('T')) {
-           try {
-               const d = new Date(safeMonth);
-               if (!isNaN(d.getTime())) {
-                   safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-               }
-           } catch(e){}
-       } else if (String(safeMonth).length > 7) {
-           safeMonth = String(safeMonth).substring(0, 7);
+       if (safeMonth) {
+           const match = String(safeMonth).match(/^(\d{4})-(\d{2})/);
+           if (match) { safeMonth = `${match[1]}-${match[2]}`; }
+           else {
+               try {
+                   const d = new Date(safeMonth);
+                   if (!isNaN(d.getTime())) safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+               } catch(e){}
+           }
        }
-       
        document.getElementById('repMonth').value = safeMonth;
        if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(safeMonth) || 'เลือกเดือน';
 
        let safeDate = parsedJson.date || reportData.date || '';
-       try {
-           const d = new Date(safeDate);
-           if (!isNaN(d.getTime())) {
-               const yyyy = d.getFullYear();
-               const mm = String(d.getMonth() + 1).padStart(2, '0');
-               const dd = String(d.getDate()).padStart(2, '0');
-               document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
-               if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
+       if (safeDate) {
+           const match = String(safeDate).match(/^(\d{4})-(\d{2})-(\d{2})/);
+           if (match) { safeDate = `${match[1]}-${match[2]}-${match[3]}`; }
+           else {
+               try {
+                   const d = new Date(safeDate);
+                   if (!isNaN(d.getTime())) safeDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+               } catch(e) {}
            }
-       } catch (e) {}
+       }
+       document.getElementById('repDate').value = safeDate;
+       if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(safeDate) || 'เลือกวันที่';
        
        document.getElementById('repInspiration').value = parsedJson.inspiration || '';
        document.getElementById('repObstacle').value = parsedJson.obstacle || '';
@@ -1626,16 +1653,41 @@
            }
        }
        
-       // ดึงข้อมูลไฟล์แนบเดิมมาแสดงในหน้า UI ให้ครบถ้วน
-       window.existingDraftFilesMeta = parsedJson.saved_files_meta || [];
+       // ดึงลิงก์ไฟล์ของจริงเพื่อนำไปโชว์ใน Print Preview
+       let existingUrls = [];
+       const possibleKeys = ['fileUrls', 'file_urls', 'file_url', 'fileurls', 'files'];
+       for (let key of possibleKeys) {
+           if (reportData[key] && typeof reportData[key] === 'string' && reportData[key].startsWith('http')) {
+               existingUrls = reportData[key].split(',');
+               break;
+           }
+       }
+       
+       // จับคู่ข้อมูล Meta กับลิงก์ของไฟล์
+       window.existingDraftFilesMeta = (parsedJson.saved_files_meta || []).map((meta, index) => {
+           return { ...meta, url: existingUrls[index] || '' };
+       });
+
        if (window.existingDraftFilesMeta.length > 0) {
            window.existingDraftFilesMeta.forEach((meta) => {
                const el = document.createElement('div');
                el.className = "flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm";
+               
+               let thumb = `<div class="w-16 h-16 flex items-center justify-center bg-amber-100 rounded-xl flex-shrink-0"><i class="ph-fill ph-file text-3xl text-amber-600"></i></div>`;
+               if (meta.url) {
+                   let imgUrl = meta.url;
+                   // แปลงลิงก์ Drive ให้รองรับการดึงรูปภาพแบบ Thumbnail
+                   const match = imgUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                   if (match) {
+                       imgUrl = `https://drive.google.com/uc?id=${match[1]}`;
+                   }
+                   if (meta.mimeType && meta.mimeType.startsWith('image/')) {
+                       thumb = `<img src="${imgUrl}" class="w-16 h-16 object-cover rounded-xl border border-gray-200" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-16 h-16 flex items-center justify-center bg-amber-100 rounded-xl flex-shrink-0\\'><i class=\\'ph-fill ph-file text-3xl text-amber-600\\'></i></div>';">`;
+                   }
+               }
+
                el.innerHTML = `
-                   <div class="w-16 h-16 flex items-center justify-center bg-amber-100 rounded-xl flex-shrink-0">
-                       <i class="ph-fill ph-file text-3xl text-amber-600"></i>
-                   </div>
+                   ${thumb}
                    <div class="flex-1 min-w-0 w-full">
                        <p class="text-sm font-bold text-gray-800 truncate pr-2">${meta.name || 'ไฟล์แนบเดิม'}</p>
                        <p class="text-xs text-gray-500 mt-1"><b class="text-gray-700">คำอธิบาย:</b> ${meta.desc || '-'}</p>
