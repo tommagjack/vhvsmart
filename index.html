@@ -406,8 +406,9 @@
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:scale-110 transition-transform">
                             <i class="ph-fill ph-image text-4xl text-gray-400 group-hover:text-sky-500 transition-colors"></i>
                         </div>
-                        <p class="text-base font-bold text-gray-700">ยังไม่มีเอกสารแนบ</p>
+                        <p class="text-base font-bold text-gray-700">ยังไม่มีเอกสารแนบใหม่</p>
                         <p class="text-sm text-gray-500 mt-2">คลิกที่นี่ หรือปุ่มด้านบนเพื่อเลือกไฟล์ภาพ หรือ ไฟล์ PDF<br>(สูงสุด 5MB ต่อไฟล์)</p>
+                        <p class="text-[10px] text-red-500 mt-2 font-medium">* หมายเหตุ: หากมีไฟล์แนบเดิมอยู่ในระบบ การแนบไฟล์ใหม่จะแทนที่ของเดิมทั้งหมด</p>
                         <input type="file" id="fileUpload" multiple accept="image/*,.pdf" class="hidden" onchange="handleFileSelect(event)">
                       </div>
                       
@@ -681,7 +682,7 @@
             <div class="p-4 border-b border-gray-300 bg-white flex justify-between items-center z-10 shadow-sm">
               <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2"><i class="ph-fill ph-printer text-sky-600"></i> ตัวอย่างแบบรายงาน (A4)</h3>
               <div class="flex gap-2">
-                <button onclick="printIframe()" class="bg-sky-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-sky-700 transition-colors shadow-sm flex items-center gap-1"><i class="ph-bold ph-printer"></i> พิมพ์</button>
+                <button onclick="printIframe()" class="bg-sky-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-sky-700 transition-colors shadow-sm flex items-center gap-1"><i class="ph-bold ph-printer text-lg"></i> พิมพ์</button>
                 <button onclick="closeModal('printPreviewModal')" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors"><i class="ph ph-x text-xl"></i></button>
               </div>
             </div>
@@ -1084,8 +1085,8 @@
         const getChecks = (rowId) => {
             let row = activities[rowId] || { withYou: false, fda: false, tools: [] };
             return `
-              <td style="text-align:center; vertical-align:top; padding:8px 0; font-size:16px;">${cb(row.withYou)}</td>
-              <td style="text-align:center; vertical-align:top; padding:8px 0; font-size:16px;">${cb(row.fda)}</td>
+              <td style="text-align:center; vertical-align:top; padding:4px 0; font-size:14px;">${cb(row.withYou)}</td>
+              <td style="text-align:center; vertical-align:top; padding:4px 0; font-size:14px;">${cb(row.fda)}</td>
             `;
         };
         const getResult = (rowId) => {
@@ -1099,64 +1100,64 @@
               
               if (rowType === 1) { 
                  others = tools.filter(t => t !== 'สเตียรอยด์');
-                 html = `<div><span style="font-size:16px;">${cb(tools.includes('สเตียรอยด์'))}</span> สเตียรอยด์</div>
-                         <div><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</div>`;
+                 html = `<div><span style="font-size:14px;">${cb(tools.includes('สเตียรอยด์'))}</span> สเตียรอยด์</div>
+                         <div><span style="font-size:14px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</div>`;
               } 
               else if (rowType === 2) { 
                  const std = ['บอแรกซ์','ฟอร์มาลิน','สารกันรา','สารฟอกขาว','น้ำมันทอดซ้ำ','ยาฆ่าแมลง'];
                  others = tools.filter(t => !std.includes(t));
-                 html = `<table style="width:100%; border:none; margin:0; padding:0; font-size:13px;">
+                 html = `<table style="width:100%; border:none; margin:0; padding:0; font-size:11px;">
                           <tr>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('บอแรกซ์'))}</span> บอแรกซ์</td>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ฟอร์มาลิน'))}</span> ฟอร์มาลิน</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('บอแรกซ์'))}</span> บอแรกซ์</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('ฟอร์มาลิน'))}</span> ฟอร์มาลิน</td>
                           </tr>
                           <tr>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('สารกันรา'))}</span> สารกันรา</td>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('สารฟอกขาว'))}</span> สารฟอกขาว</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('สารกันรา'))}</span> สารกันรา</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('สารฟอกขาว'))}</span> สารฟอกขาว</td>
                           </tr>
                           <tr>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('น้ำมันทอดซ้ำ'))}</span> น้ำมันทอดซ้ำ</td>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ยาฆ่าแมลง'))}</span> ยาฆ่าแมลง</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('น้ำมันทอดซ้ำ'))}</span> น้ำมันทอดซ้ำ</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('ยาฆ่าแมลง'))}</span> ยาฆ่าแมลง</td>
                           </tr>
                           <tr>
-                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</td>
+                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:14px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</td>
                           </tr>
                         </table>`;
               }
               else if (rowType === 3) { 
                  const std = ['ปรอท','กรดเรทิโนอิก','ไฮโดรควิโนน'];
                  others = tools.filter(t => !std.includes(t));
-                 html = `<table style="width:100%; border:none; margin:0; padding:0; font-size:13px;">
+                 html = `<table style="width:100%; border:none; margin:0; padding:0; font-size:11px;">
                           <tr>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ปรอท'))}</span> ปรอท</td>
-                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('กรดเรทิโนอิก'))}</span> กรดเรทิโนอิก</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('ปรอท'))}</span> ปรอท</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('กรดเรทิโนอิก'))}</span> กรดเรทิโนอิก</td>
                           </tr>
                           <tr>
-                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ไฮโดรควิโนน'))}</span> ไฮโดรควิโนน</td>
+                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:14px;">${cb(tools.includes('ไฮโดรควิโนน'))}</span> ไฮโดรควิโนน</td>
                           </tr>
                           <tr>
-                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</td>
+                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:14px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</td>
                           </tr>
                         </table>`;
               }
               else if (rowType === 4) { 
-                 html = `<div><span style="font-size:16px;">${cb(tools.length > 0)}</span> ${tools[0] || '................................'}</div>
-                         <div><span style="font-size:16px;">${cb(tools.length > 1)}</span> ${tools[1] || '................................'}</div>`;
+                 html = `<div><span style="font-size:14px;">${cb(tools.length > 0)}</span> ${tools[0] || '................................'}</div>
+                         <div><span style="font-size:14px;">${cb(tools.length > 1)}</span> ${tools[1] || '................................'}</div>`;
               }
               else if (rowType === 5) { 
                  const std = ['ชุดเก็บตัวอย่างมะเร็งปากมดลูก','เครื่องวัดความดัน','เครื่องตรวจน้ำตาลในเลือด'];
                  others = tools.filter(t => !std.includes(t));
-                 html = `<div><span style="font-size:16px;">${cb(tools.includes('ชุดเก็บตัวอย่างมะเร็งปากมดลูก'))}</span> ชุดเก็บตัวอย่างมะเร็งปากมดลูก</div>
-                         <div><span style="font-size:16px;">${cb(tools.includes('เครื่องวัดความดัน'))}</span> เครื่องวัดความดัน</div>
-                         <div><span style="font-size:16px;">${cb(tools.includes('เครื่องตรวจน้ำตาลในเลือด'))}</span> เครื่องตรวจน้ำตาลในเลือด</div>
-                         <div><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</div>`;
+                 html = `<div><span style="font-size:14px;">${cb(tools.includes('ชุดเก็บตัวอย่างมะเร็งปากมดลูก'))}</span> ชุดเก็บตัวอย่างมะเร็งปากมดลูก</div>
+                         <div><span style="font-size:14px;">${cb(tools.includes('เครื่องวัดความดัน'))}</span> เครื่องวัดความดัน</div>
+                         <div><span style="font-size:14px;">${cb(tools.includes('เครื่องตรวจน้ำตาลในเลือด'))}</span> เครื่องตรวจน้ำตาลในเลือด</div>
+                         <div><span style="font-size:14px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</div>`;
               }
               else if (rowType === 6) { 
-                 html = `<div><span style="font-size:16px;">${cb(tools.length > 0)}</span> ${tools[0] || '................................'}</div>
-                         <div><span style="font-size:16px;">${cb(tools.length > 1)}</span> ${tools[1] || '................................'}</div>
-                         <div><span style="font-size:16px;">${cb(tools.length > 2)}</span> ${tools[2] || '................................'}</div>`;
+                 html = `<div><span style="font-size:14px;">${cb(tools.length > 0)}</span> ${tools[0] || '................................'}</div>
+                         <div><span style="font-size:14px;">${cb(tools.length > 1)}</span> ${tools[1] || '................................'}</div>
+                         <div><span style="font-size:14px;">${cb(tools.length > 2)}</span> ${tools[2] || '................................'}</div>`;
               }
-              return `<td style="vertical-align:top; padding:8px;">${html}</td>`;
+              return `<td style="vertical-align:top; padding:4px;">${html}</td>`;
         };
 
         let attachmentsHtml = '';
@@ -1188,28 +1189,28 @@
                 <meta charset="UTF-8">
                 <style>
                   @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-                  @page { size: A4 portrait; margin: 1.5cm; }
-                  body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 13px; line-height: 1.4; color: #000; margin: 0; padding: 1.5cm; box-sizing: border-box; }
-                  .header-box { position: absolute; top: 1.5cm; right: 1.5cm; border: 1px solid #000; padding: 4px 15px; text-align: center; font-size: 11px; font-weight: bold; }
+                  @page { size: A4 portrait; margin: 1cm; }
+                  body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 12px; line-height: 1.2; color: #000; margin: 0; padding: 1cm; box-sizing: border-box; }
+                  .header-box { position: absolute; top: 1cm; right: 1cm; border: 1px solid #000; padding: 2px 10px; text-align: center; font-size: 10px; font-weight: bold; }
                   .logo-container { text-align: center; margin-bottom: 5px; }
-                  .logo-container img { width: 60px; height: 60px; opacity: 0.8; filter: grayscale(100%); }
-                  .title { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 20px; }
-                  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; border: none; }
-                  .info-table td { padding: 4px 0; border: none; vertical-align: bottom; }
-                  .dot-field { border-bottom: 1px dotted #000; display: inline-block; padding: 0 10px; color: #000; }
-                  .data-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
-                  .data-table th, .data-table td { border: 1px solid #000; padding: 5px; }
-                  .data-table th { text-align: center; background-color: #f9f9f9; font-weight: normal; }
-                  .bottom-section { font-size: 13px; margin-bottom: 10px; }
-                  .long-dot { border-bottom: 1px dotted #000; min-height: 20px; display: inline-block; width: 100%; margin-top: 5px; }
-                  .sig-table { width: 100%; margin-top: 25px; text-align: center; border: none; }
-                  .sig-table td { width: 50%; padding: 5px; border: none; }
-                  .remark-text { margin-top: 20px; font-weight: bold; font-size: 11px; text-align: center; }
+                  .logo-container img { width: 50px; height: 50px; opacity: 0.8; filter: grayscale(100%); }
+                  .title { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 10px; }
+                  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 12px; border: none; }
+                  .info-table td { padding: 2px 0; border: none; vertical-align: bottom; }
+                  .dot-field { border-bottom: 1px dotted #000; display: inline-block; padding: 0 5px; color: #000; }
+                  .data-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
+                  .data-table th, .data-table td { border: 1px solid #000; padding: 3px 4px; }
+                  .data-table th { text-align: center; background-color: #f9f9f9; font-weight: bold; }
+                  .bottom-section { font-size: 12px; margin-bottom: 6px; }
+                  .long-dot { border-bottom: 1px dotted #000; min-height: 16px; display: inline-block; width: 100%; margin-top: 2px; }
+                  .sig-table { width: 100%; margin-top: 15px; text-align: center; border: none; font-size: 12px; }
+                  .sig-table td { width: 50%; padding: 2px; border: none; }
+                  .remark-text { margin-top: 10px; font-weight: bold; font-size: 10px; text-align: center; }
                   .page-break { page-break-before: always; }
-                  .attachment-container { width: 100%; height: 95%; text-align: center; padding-top: 30px; box-sizing: border-box; }
-                  .attachment-title { font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; color: #333; }
-                  .attachment-img { max-width: 90%; max-height: 650px; object-fit: contain; border: 2px solid #ccc; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); border-radius: 4px; margin-bottom: 25px; }
-                  .attachment-desc { font-size: 15px; text-align: left; background: #f1f5f9; padding: 15px 20px; border-radius: 8px; border-left: 5px solid #0284c7; width: 85%; margin: 0 auto; word-wrap: break-word; }
+                  .attachment-container { width: 100%; height: 95%; text-align: center; padding-top: 20px; box-sizing: border-box; }
+                  .attachment-title { font-size: 16px; font-weight: bold; text-decoration: underline; margin-bottom: 20px; color: #333; }
+                  .attachment-img { max-width: 90%; max-height: 600px; object-fit: contain; border: 1px solid #ccc; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); border-radius: 4px; margin-bottom: 15px; }
+                  .attachment-desc { font-size: 14px; text-align: left; background: #f1f5f9; padding: 10px 15px; border-radius: 8px; border-left: 4px solid #0284c7; width: 85%; margin: 0 auto; word-wrap: break-word; }
                   @media print {
                       body { padding: 0; }
                       .header-box { top: 0; right: 0; }
@@ -1448,7 +1449,7 @@
         let count = 0;
 
         reports.forEach(r => {
-          const rDate = formatThaiDate(r.timestamp.split('T')[0]); // ใช้ formatThaiDate กับเวลาส่ง
+          const rDate = formatThaiDate(r.timestamp.split('T')[0]); 
           if (filterMonth && r.month !== filterMonth) return;
           count++;
 
@@ -1548,8 +1549,38 @@
            }
        }
        
+       // แสดงรายการไฟล์แนบเดิม (ถ้ามี)
+       let existingUrls = [];
+       const possibleKeys = ['fileUrls', 'file_urls', 'file_url', 'fileurls', 'files'];
+       for (let key of possibleKeys) {
+           if (reportData[key] && typeof reportData[key] === 'string' && reportData[key].startsWith('http')) {
+               existingUrls = reportData[key].split(',');
+               break;
+           }
+       }
+       
+       if (existingUrls.length > 0) {
+           existingUrls.forEach((url, idx) => {
+               if (!url.trim()) return;
+               const el = document.createElement('div');
+               el.className = "flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm";
+               el.innerHTML = `
+                   <div class="w-16 h-16 flex items-center justify-center bg-gray-200 rounded-xl flex-shrink-0">
+                       <i class="ph-fill ph-link text-3xl text-gray-500"></i>
+                   </div>
+                   <div class="flex-1 min-w-0">
+                       <p class="text-sm font-bold text-gray-800">ไฟล์แนบเดิมที่ ${idx + 1}</p>
+                       <a href="${url}" target="_blank" class="text-xs text-sky-600 hover:underline truncate block w-full">${url}</a>
+                   </div>
+                   <div class="text-xs text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded border border-amber-100 flex-shrink-0">ไฟล์บนระบบ</div>
+               `;
+               document.getElementById('filePreviewArea').appendChild(el);
+           });
+           document.getElementById('emptyFileState').classList.add('hidden');
+       }
+       
        navigateTo('createReportView');
-       showToast('โหมดแก้ไข', 'ดึงข้อมูลตารางของคุณเรียบร้อยแล้ว (หากมีไฟล์แนบ กรุณาแนบใหม่)');
+       showToast('โหมดแก้ไข', 'ดึงข้อมูลตารางของคุณเรียบร้อยแล้ว (หากเพิ่มไฟล์ใหม่ จะแทนที่ของเดิม)');
     }
 
     function exportReportsCSV() {
@@ -1708,7 +1739,6 @@
             return; 
         }
 
-        // Calculate Pagination
         const totalItems = cachedCertificates.length;
         const totalPages = Math.ceil(totalItems / CERT_ITEMS_PER_PAGE);
         if (certCurrentPage > totalPages) certCurrentPage = totalPages;
@@ -1720,7 +1750,6 @@
 
         document.getElementById('certPageInfo').innerText = `แสดง ${startIndex + 1} ถึง ${endIndex} จาก ${totalItems} รายการ`;
 
-        // Render Rows
         currentItems.forEach((c, index) => {
             const actualIndex = startIndex + index + 1;
             const cDate = formatThaiDate(c.completion_date);
@@ -1731,7 +1760,6 @@
             const tr = document.createElement('tr'); 
             tr.className = "hover:bg-sky-50/50 transition-colors";
             
-            // ให้ Admin มองเห็นชื่อเจ้าของเกียรติบัตรด้วย
             const ownerText = currentUser.role === 'admin' ? `<div class="text-xs text-gray-500 mt-1"><i class="ph-fill ph-user"></i> ${c.fullname}</div>` : '';
 
             tr.innerHTML = `
@@ -1752,7 +1780,6 @@
             container.appendChild(tr);
         });
 
-        // Render Pagination Buttons
         let pageBtns = '';
         pageBtns += `<button onclick="changeCertPage(${certCurrentPage - 1})" class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50" ${certCurrentPage === 1 ? 'disabled' : ''}>ก่อนหน้า</button>`;
         for(let p = 1; p <= totalPages; p++) {
@@ -1782,7 +1809,7 @@
        document.getElementById('certFileLabel').innerText = 'คลิกเพื่อเลือกไฟล์ (สูงสุด 5MB)';
        document.getElementById('certFileLabel').classList.replace('text-sky-600', 'text-gray-600');
        document.getElementById('certFileUpload').value = '';
-       document.getElementById('certFileReq').style.display = 'inline'; // บังคับแนบไฟล์ตอนสร้างใหม่
+       document.getElementById('certFileReq').style.display = 'inline'; 
        document.getElementById('certModal').classList.remove('hidden');
     }
 
@@ -1805,7 +1832,7 @@
        document.getElementById('certFileLabel').innerText = 'มีไฟล์แนบเดิมอยู่แล้ว (คลิกเพื่อเปลี่ยนไฟล์ใหม่)';
        document.getElementById('certFileLabel').classList.replace('text-gray-600', 'text-sky-600');
        document.getElementById('certFileUpload').value = '';
-       document.getElementById('certFileReq').style.display = 'none'; // แก้ไขไม่บังคับแนบไฟล์ซ้ำ
+       document.getElementById('certFileReq').style.display = 'none'; 
        document.getElementById('certModal').classList.remove('hidden');
     }
 
@@ -1849,7 +1876,6 @@
            cachedCertificates = null; 
            loadCertificates(true);
        } catch (err) { 
-           // ดักจับ Error "Load failed" ของ Safari/Mobile ที่มักเกิดหลังจากการอัปโหลดไฟล์ขนาดใหญ่เสร็จสิ้น
            const errorMsg = err.message.toLowerCase();
            if (errorMsg.includes('load failed') || errorMsg.includes('fetch') || errorMsg.includes('network')) {
                showToast('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว');
