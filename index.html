@@ -240,11 +240,17 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <div class="flex items-end">
                   <span class="whitespace-nowrap mr-3 font-semibold text-gray-700">ประจำเดือน</span>
-                  <input type="month" id="repMonth" required class="paper-input font-bold text-sky-700 text-base">
+                  <div class="relative flex-1">
+                    <input type="month" id="repMonth" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(this.value) || 'เลือกเดือน'">
+                    <div id="repMonthDisplay" class="paper-input font-bold text-sky-700 text-base pb-1 border-b border-dotted border-gray-300">เลือกเดือน</div>
+                  </div>
                 </div>
                 <div class="flex items-end">
                   <span class="whitespace-nowrap mr-3 font-semibold text-gray-700">วันที่</span>
-                  <input type="date" id="repDate" required class="paper-input font-bold text-sky-700 text-base">
+                  <div class="relative flex-1">
+                    <input type="date" id="repDate" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="document.getElementById('repDateDisplay').innerText = formatThaiDate(this.value) || 'เลือกวันที่'">
+                    <div id="repDateDisplay" class="paper-input font-bold text-sky-700 text-base pb-1 border-b border-dotted border-gray-300">เลือกวันที่</div>
+                  </div>
                 </div>
                 <div class="flex items-end mt-2">
                   <span class="whitespace-nowrap mr-3 font-semibold text-gray-700">ชื่อ-สกุล</span>
@@ -412,7 +418,10 @@
             </div>
 
             <!-- Actions -->
-            <div class="p-6 md:p-8 bg-gray-100 flex flex-col sm:flex-row justify-end gap-4 border-t border-gray-200">
+            <div class="p-6 md:p-8 bg-gray-100 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-200">
+              <button type="button" onclick="openReportPreview()" class="sm:w-48 bg-white border-2 border-sky-400 text-sky-600 hover:bg-sky-50 font-bold py-3.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                <i class="ph-fill ph-printer text-xl"></i> ตัวอย่างก่อนพิมพ์
+              </button>
               <button type="button" onclick="submitReport(true)" class="sm:w-48 bg-white border-2 border-amber-400 text-amber-600 hover:bg-amber-50 font-bold py-3.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
                 <i class="ph-fill ph-floppy-disk text-xl"></i> บันทึกร่าง (Draft)
               </button>
@@ -626,7 +635,10 @@
                </div>
                <div>
                   <label class="block text-sm font-bold text-gray-700 mb-1.5">วันที่สำเร็จ / วันที่ได้รับ <span class="text-red-500">*</span></label>
-                  <input type="date" id="certDate" class="w-full border border-gray-300 bg-gray-50 focus:bg-white rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-colors">
+                  <div class="relative w-full">
+                    <input type="date" id="certDate" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="document.getElementById('certDateDisplayModal').innerText = formatThaiDate(this.value) || 'เลือกวันที่'">
+                    <div id="certDateDisplayModal" class="w-full border border-gray-300 bg-gray-50 rounded-xl p-2.5 text-sm text-gray-700 transition-colors">เลือกวันที่</div>
+                  </div>
                </div>
                <div>
                   <label class="block text-sm font-bold text-gray-700 mb-1.5">แนบไฟล์ (PDF หรือรูปภาพ) <span class="text-red-500" id="certFileReq">*</span></label>
@@ -663,6 +675,24 @@
           </div>
         </div>
 
+        <!-- === MODAL FOR PRINT PREVIEW === -->
+        <div id="printPreviewModal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 transition-opacity">
+          <div class="bg-gray-200 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col h-[95vh]">
+            <div class="p-4 border-b border-gray-300 bg-white flex justify-between items-center z-10 shadow-sm">
+              <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2"><i class="ph-fill ph-printer text-sky-600"></i> ตัวอย่างแบบรายงาน (A4)</h3>
+              <div class="flex gap-2">
+                <button onclick="printIframe()" class="bg-sky-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-sky-700 transition-colors shadow-sm flex items-center gap-1"><i class="ph-bold ph-printer"></i> พิมพ์</button>
+                <button onclick="closeModal('printPreviewModal')" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors"><i class="ph ph-x text-xl"></i></button>
+              </div>
+            </div>
+            <div class="flex-1 overflow-auto p-4 flex justify-center bg-gray-200">
+               <div id="previewIframeContainer" class="bg-white shadow-lg w-full max-w-[210mm] min-h-[297mm]">
+                  <iframe id="previewIframe" class="w-full h-full border-0 pointer-events-none" style="min-h: 297mm;"></iframe>
+               </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -689,6 +719,24 @@
     let certCurrentPage = 1;
     const CERT_ITEMS_PER_PAGE = 15;
 
+    const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    
+    function formatThaiMonthYear(yyyy_mm) {
+        if (!yyyy_mm) return '';
+        const parts = yyyy_mm.split('-');
+        if (parts.length !== 2) return yyyy_mm;
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        return `${thaiMonths[month - 1]} ${year + 543}`;
+    }
+
+    function formatThaiDate(yyyy_mm_dd) {
+        if (!yyyy_mm_dd) return '';
+        const d = new Date(yyyy_mm_dd);
+        if (isNaN(d.getTime())) return yyyy_mm_dd;
+        return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const savedUser = localStorage.getItem('smart_osm_user');
       if (savedUser) {
@@ -704,8 +752,11 @@
       const yyyy = today.getFullYear();
       
       document.getElementById('repMonth').value = `${yyyy}-${mm}`;
+      if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(`${yyyy}-${mm}`);
       document.getElementById('filterMonth').value = ''; 
+      
       document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
+      if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
     });
 
     // ================= UI CONTROLS =================
@@ -987,6 +1038,279 @@
       reader.onerror = error => reject(error);
     });
 
+    // ================= REPORT PREVIEW =================
+    function openReportPreview() {
+        let activities = {};
+        const rows = document.querySelectorAll('#paperTable tbody tr');
+        
+        rows.forEach(row => {
+            const rowId = row.getAttribute('data-row');
+            if (!rowId) return;
+
+            const resultText = row.querySelector('.paper-result').value.trim();
+            const withYou = row.querySelector('.paper-withyou').checked;
+            const fda = row.querySelector('.paper-fda').checked;
+            
+            let tools = [];
+            row.querySelectorAll('.paper-tool:checked').forEach(cb => {
+                if (cb.value.startsWith('อื่นๆ')) {
+                    const textInput = cb.closest('label').querySelector('.paper-tool-other');
+                    if (textInput && textInput.value.trim() !== '') {
+                        tools.push(textInput.value.trim());
+                    }
+                } else {
+                    tools.push(cb.value);
+                }
+            });
+
+            activities[rowId] = { result: resultText, withYou: withYou, fda: fda, tools: tools };
+        });
+
+        const monthVal = document.getElementById('repMonth').value;
+        const dateVal = document.getElementById('repDate').value;
+        const formattedMonth = formatThaiMonthYear(monthVal);
+        const formattedDate = formatThaiDate(dateVal);
+        const inspiration = document.getElementById('repInspiration').value.trim();
+        const obstacle = document.getElementById('repObstacle').value.trim();
+
+        let fileDescriptions = {};
+        document.querySelectorAll('.file-desc').forEach(input => {
+            if (input.value.trim() !== '') {
+                fileDescriptions[input.getAttribute('data-id')] = input.value.trim();
+            }
+        });
+
+        const cb = (isChecked) => isChecked ? '☑' : '☐';
+        const getChecks = (rowId) => {
+            let row = activities[rowId] || { withYou: false, fda: false, tools: [] };
+            return `
+              <td style="text-align:center; vertical-align:top; padding:8px 0; font-size:16px;">${cb(row.withYou)}</td>
+              <td style="text-align:center; vertical-align:top; padding:8px 0; font-size:16px;">${cb(row.fda)}</td>
+            `;
+        };
+        const getResult = (rowId) => {
+             let row = activities[rowId] || { result: '' };
+             return row.result.replace(/\n/g, '<br>');
+        };
+        const getToolsStr = (rowId, rowType) => {
+              let tools = (activities[rowId] && activities[rowId].tools) ? activities[rowId].tools : [];
+              let others = [];
+              let html = '';
+              
+              if (rowType === 1) { 
+                 others = tools.filter(t => t !== 'สเตียรอยด์');
+                 html = `<div><span style="font-size:16px;">${cb(tools.includes('สเตียรอยด์'))}</span> สเตียรอยด์</div>
+                         <div><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</div>`;
+              } 
+              else if (rowType === 2) { 
+                 const std = ['บอแรกซ์','ฟอร์มาลิน','สารกันรา','สารฟอกขาว','น้ำมันทอดซ้ำ','ยาฆ่าแมลง'];
+                 others = tools.filter(t => !std.includes(t));
+                 html = `<table style="width:100%; border:none; margin:0; padding:0; font-size:13px;">
+                          <tr>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('บอแรกซ์'))}</span> บอแรกซ์</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ฟอร์มาลิน'))}</span> ฟอร์มาลิน</td>
+                          </tr>
+                          <tr>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('สารกันรา'))}</span> สารกันรา</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('สารฟอกขาว'))}</span> สารฟอกขาว</td>
+                          </tr>
+                          <tr>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('น้ำมันทอดซ้ำ'))}</span> น้ำมันทอดซ้ำ</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ยาฆ่าแมลง'))}</span> ยาฆ่าแมลง</td>
+                          </tr>
+                          <tr>
+                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</td>
+                          </tr>
+                        </table>`;
+              }
+              else if (rowType === 3) { 
+                 const std = ['ปรอท','กรดเรทิโนอิก','ไฮโดรควิโนน'];
+                 others = tools.filter(t => !std.includes(t));
+                 html = `<table style="width:100%; border:none; margin:0; padding:0; font-size:13px;">
+                          <tr>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ปรอท'))}</span> ปรอท</td>
+                            <td style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('กรดเรทิโนอิก'))}</span> กรดเรทิโนอิก</td>
+                          </tr>
+                          <tr>
+                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:16px;">${cb(tools.includes('ไฮโดรควิโนน'))}</span> ไฮโดรควิโนน</td>
+                          </tr>
+                          <tr>
+                            <td colspan="2" style="border:none; padding:1px;"><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</td>
+                          </tr>
+                        </table>`;
+              }
+              else if (rowType === 4) { 
+                 html = `<div><span style="font-size:16px;">${cb(tools.length > 0)}</span> ${tools[0] || '................................'}</div>
+                         <div><span style="font-size:16px;">${cb(tools.length > 1)}</span> ${tools[1] || '................................'}</div>`;
+              }
+              else if (rowType === 5) { 
+                 const std = ['ชุดเก็บตัวอย่างมะเร็งปากมดลูก','เครื่องวัดความดัน','เครื่องตรวจน้ำตาลในเลือด'];
+                 others = tools.filter(t => !std.includes(t));
+                 html = `<div><span style="font-size:16px;">${cb(tools.includes('ชุดเก็บตัวอย่างมะเร็งปากมดลูก'))}</span> ชุดเก็บตัวอย่างมะเร็งปากมดลูก</div>
+                         <div><span style="font-size:16px;">${cb(tools.includes('เครื่องวัดความดัน'))}</span> เครื่องวัดความดัน</div>
+                         <div><span style="font-size:16px;">${cb(tools.includes('เครื่องตรวจน้ำตาลในเลือด'))}</span> เครื่องตรวจน้ำตาลในเลือด</div>
+                         <div><span style="font-size:16px;">${cb(others.length > 0)}</span> ${others.length > 0 ? others.join(', ') : '................................'}</div>`;
+              }
+              else if (rowType === 6) { 
+                 html = `<div><span style="font-size:16px;">${cb(tools.length > 0)}</span> ${tools[0] || '................................'}</div>
+                         <div><span style="font-size:16px;">${cb(tools.length > 1)}</span> ${tools[1] || '................................'}</div>
+                         <div><span style="font-size:16px;">${cb(tools.length > 2)}</span> ${tools[2] || '................................'}</div>`;
+              }
+              return `<td style="vertical-align:top; padding:8px;">${html}</td>`;
+        };
+
+        let attachmentsHtml = '';
+        let imageCount = 0;
+        if (selectedFiles && selectedFiles.length > 0) {
+            selectedFiles.forEach((f) => {
+                if (f.mimeType.startsWith('image/')) {
+                    imageCount++;
+                    const desc = fileDescriptions[f.id] || '-';
+                    attachmentsHtml += `
+                      <div class="page-break"></div>
+                      <div class="attachment-container">
+                         <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount}</h3>
+                         <img src="${f.base64}" class="attachment-img" />
+                         <div class="attachment-desc">
+                             <b>คำอธิบาย:</b> ${desc}
+                         </div>
+                      </div>
+                    `;
+                }
+            });
+        }
+
+        const dDateObj = dateVal ? new Date(dateVal) : new Date();
+
+        const htmlContent = `
+            <html>
+              <head>
+                <meta charset="UTF-8">
+                <style>
+                  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+                  @page { size: A4 portrait; margin: 1.5cm; }
+                  body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 13px; line-height: 1.4; color: #000; margin: 0; padding: 1.5cm; box-sizing: border-box; }
+                  .header-box { position: absolute; top: 1.5cm; right: 1.5cm; border: 1px solid #000; padding: 4px 15px; text-align: center; font-size: 11px; font-weight: bold; }
+                  .logo-container { text-align: center; margin-bottom: 5px; }
+                  .logo-container img { width: 60px; height: 60px; opacity: 0.8; filter: grayscale(100%); }
+                  .title { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 20px; }
+                  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; border: none; }
+                  .info-table td { padding: 4px 0; border: none; vertical-align: bottom; }
+                  .dot-field { border-bottom: 1px dotted #000; display: inline-block; padding: 0 10px; color: #000; }
+                  .data-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
+                  .data-table th, .data-table td { border: 1px solid #000; padding: 5px; }
+                  .data-table th { text-align: center; background-color: #f9f9f9; font-weight: normal; }
+                  .bottom-section { font-size: 13px; margin-bottom: 10px; }
+                  .long-dot { border-bottom: 1px dotted #000; min-height: 20px; display: inline-block; width: 100%; margin-top: 5px; }
+                  .sig-table { width: 100%; margin-top: 25px; text-align: center; border: none; }
+                  .sig-table td { width: 50%; padding: 5px; border: none; }
+                  .remark-text { margin-top: 20px; font-weight: bold; font-size: 11px; text-align: center; }
+                  .page-break { page-break-before: always; }
+                  .attachment-container { width: 100%; height: 95%; text-align: center; padding-top: 30px; box-sizing: border-box; }
+                  .attachment-title { font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; color: #333; }
+                  .attachment-img { max-width: 90%; max-height: 650px; object-fit: contain; border: 2px solid #ccc; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); border-radius: 4px; margin-bottom: 25px; }
+                  .attachment-desc { font-size: 15px; text-align: left; background: #f1f5f9; padding: 15px 20px; border-radius: 8px; border-left: 5px solid #0284c7; width: 85%; margin: 0 auto; word-wrap: break-word; }
+                  @media print {
+                      body { padding: 0; }
+                      .header-box { top: 0; right: 0; }
+                  }
+                </style>
+              </head>
+              <body>
+                <div style="position: relative;">
+                    <div class="header-box">ฟอร์ม วพช.002<br>Rev.01 (121167)</div>
+                    <div class="logo-container">
+                       <img src="https://img2.pic.in.th/Screenshot-2026-04-16-at-19.59.46.png">
+                    </div>
+                </div>
+                <div class="title">แบบรายงานผลการปฏิบัติงาน อสม.วิทยาศาสตร์การแพทย์ชุมชน (ใบงาน 1 ป)</div>
+                <table class="info-table">
+                  <tr>
+                    <td style="width: 50%;"><b>ประจำเดือน</b> <span class="dot-field" style="width: 200px;">${formattedMonth}</span></td>
+                    <td style="width: 50%;"><b>วันที่</b> <span class="dot-field" style="width: 200px;">${formattedDate}</span></td>
+                  </tr>
+                  <tr>
+                    <td><b>ชื่อ-สกุล</b> <span class="dot-field" style="width: 220px;">${currentUser.fullname}</span></td>
+                    <td><b>สังกัด (รพ.สต./สอน./PCU/อื่นๆ)</b> <span class="dot-field" style="width: 150px;">${currentUser.hoscode}</span></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2">
+                      <b>ตำบล</b> <span class="dot-field" style="width: 150px;">${currentUser.subdistrict}</span>
+                      <b>อำเภอ</b> <span class="dot-field" style="width: 150px;">${currentUser.district}</span>
+                      <b>จังหวัด</b> <span class="dot-field" style="width: 150px;">${currentUser.province}</span>
+                    </td>
+                  </tr>
+                </table>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th rowspan="2" style="width:23%;">กิจกรรมการปฏิบัติงาน<br>ตามบทบาท 1ป2ส</th>
+                      <th rowspan="2" style="width:25%;">ผลงาน<br>(จำนวนตัวอย่าง ชื่อตัวอย่าง)</th>
+                      <th colspan="3">เครื่องมือที่ใช้ (กา ☑ หน้าข้อที่ได้ปฏิบัติ)</th>
+                    </tr>
+                    <tr>
+                      <th style="width:10%;">กรมวิทย์<br>With you</th>
+                      <th style="width:10%;">Fda อย.</th>
+                      <th style="width:32%;">ชุดทดสอบที่ได้ใช้</th>
+                    </tr>
+                    <tr>
+                      <th colspan="5" style="text-align:left; font-weight:bold; background:#f0f0f0;">1ป: ป้องกันพิษอันตรายต่อชุมชน เฝ้าระวังความเสี่ยงต่อสุขภาพของคนในชุมชน</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td style="vertical-align:top;">1. ตรวจยา</td><td style="vertical-align:top;">${getResult('row1')}</td>${getChecks('row1')}${getToolsStr('row1', 1)}</tr>
+                    <tr><td style="vertical-align:top;">2. ตรวจอาหาร</td><td style="vertical-align:top;">${getResult('row2')}</td>${getChecks('row2')}${getToolsStr('row2', 2)}</tr>
+                    <tr><td style="vertical-align:top;">3. ตรวจเครื่องสำอาง</td><td style="vertical-align:top;">${getResult('row3')}</td>${getChecks('row3')}${getToolsStr('row3', 3)}</tr>
+                    <tr><td style="vertical-align:top;">4. ตรวจยาเสพติดในปัสสาวะ</td><td style="vertical-align:top;">${getResult('row4')}</td>${getChecks('row4')}${getToolsStr('row4', 4)}</tr>
+                    <tr><td style="vertical-align:top;">5. การตรวจคัดกรองโรค</td><td style="vertical-align:top;">${getResult('row5')}</td>${getChecks('row5')}${getToolsStr('row5', 5)}</tr>
+                    <tr><td style="vertical-align:top;">6. อื่นๆ</td><td style="vertical-align:top;">${getResult('row6')}</td>${getChecks('row6')}${getToolsStr('row6', 6)}</tr>
+                  </tbody>
+                </table>
+                <div class="bottom-section">
+                  <b>แรงบันดาลใจ/ปัจจัยที่ทำให้สำเร็จ:</b>
+                  <div class="long-dot">${inspiration}</div>
+                  <div class="long-dot"></div>
+                </div>
+                <div class="bottom-section">
+                  <b>ปัญหา/อุปสรรค ที่พบในระหว่างการปฏิบัติงาน:</b>
+                  <div class="long-dot">${obstacle}</div>
+                </div>
+                <div class="bottom-section">
+                  <u>หมายเหตุ</u>: มีเอกสารแนบเพิ่มเติม หรือภาพประกอบ จำนวน <span class="dot-field" style="width: 50px; text-align: center;">${imageCount}</span> หน้า (ถ้ามี)
+                </div>
+                <table class="sig-table">
+                  <tr>
+                    <td>
+                       ลงชื่อ .................................................... อสม.<br>
+                       ( ${currentUser.fullname} )<br>
+                       วันที่ <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getDate()}</span> / <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getMonth()+1}</span> / <span class="dot-field" style="width:40px; text-align:center;">${dDateObj.getFullYear()+543}</span>
+                    </td>
+                    <td>
+                       ลงชื่อ .................................................... เจ้าหน้าที่ผู้รับผิดชอบ<br>
+                       ( .................................................... )<br>
+                       ตำแหน่ง ....................................................<br>
+                       วันที่ ............ / ............ / ............
+                    </td>
+                  </tr>
+                </table>
+                <div class="remark-text">
+                   *** หมายเหตุ ใบงานนี้ เป็นหลักฐานส่วนสำคัญส่วนหนึ่งสำหรับการประเมินความสามารถ อสม.วิทยาศาสตร์การแพทย์ชุมชน ขั้นที่ 2
+                </div>
+                ${attachmentsHtml}
+              </body>
+            </html>
+        `;
+
+        const iframe = document.getElementById('previewIframe');
+        iframe.srcdoc = htmlContent;
+        document.getElementById('printPreviewModal').classList.remove('hidden');
+    }
+
+    function printIframe() {
+        const iframe = document.getElementById('previewIframe');
+        iframe.contentWindow.print();
+    }
+
     // ================= SUBMIT REPORT =================
     async function submitReport(isDraft) {
       let activities = {};
@@ -1083,6 +1407,17 @@
       document.getElementById('repInspiration').value = '';
       document.getElementById('repObstacle').value = '';
       
+      const today = new Date();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      
+      document.getElementById('repMonth').value = `${yyyy}-${mm}`;
+      if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(`${yyyy}-${mm}`);
+      
+      document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
+      if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
+
       document.getElementById('filePreviewArea').innerHTML = '';
       selectedFiles = [];
       updateEmptyState();
@@ -1113,10 +1448,11 @@
         let count = 0;
 
         reports.forEach(r => {
-          const rDate = new Date(r.timestamp).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+          const rDate = formatThaiDate(r.timestamp.split('T')[0]); // ใช้ formatThaiDate กับเวลาส่ง
           if (filterMonth && r.month !== filterMonth) return;
           count++;
 
+          const dispMonth = formatThaiMonthYear(r.month);
           const pdfLink = r.pdf_url ? `<a href="${r.pdf_url}" target="_blank" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-red-200 hover:border-red-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-file-pdf text-lg"></i> โหลด PDF ใบงาน 1 ป</a>` : '';
           
           let actionBtns = '';
@@ -1136,7 +1472,7 @@
                 ${getStatusBadge(r.status)}
               </div>
               <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
-                  <span class="flex items-center gap-1"><i class="ph-fill ph-calendar-blank text-gray-400"></i> ${r.month}</span>
+                  <span class="flex items-center gap-1"><i class="ph-fill ph-calendar-blank text-gray-400"></i> ${dispMonth}</span>
                   <span class="flex items-center gap-1"><i class="ph-fill ph-clock text-gray-400"></i> ส่งเมื่อ: ${rDate}</span>
                   <span class="flex items-center gap-1"><i class="ph-fill ph-barcode text-gray-400"></i> รหัส: ${r.report_id.split('-')[2] || r.report_id}</span>
               </div>
@@ -1163,9 +1499,15 @@
        document.getElementById('createReportTitle').innerHTML = `<i class="ph-fill ph-file-text text-amber-500"></i> แก้ไขแบบร่าง: <span class="text-base text-gray-500 font-normal ml-2 bg-gray-100 px-2 py-1 rounded">#${id}</span>`;
 
        document.getElementById('repMonth').value = reportData.month || '';
+       if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(reportData.month) || 'เลือกเดือน';
+
        try {
            const d = new Date(reportData.date);
-           document.getElementById('repDate').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+           const yyyy = d.getFullYear();
+           const mm = String(d.getMonth() + 1).padStart(2, '0');
+           const dd = String(d.getDate()).padStart(2, '0');
+           document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
+           if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
        } catch (e) {}
        
        const parsedJson = reportData.activity_json || {};
@@ -1217,8 +1559,8 @@
         csvContent += headers.join(",") + "\n";
         cachedReportsData.forEach(r => {
             const rowData = [
-                r.report_id, new Date(r.timestamp).toLocaleString('th-TH'), r.hoscode, r.fullname, r.role, r.month, new Date(r.date).toLocaleDateString('th-TH'),
-                r.subdistrict, r.district, r.province, r.status, r.approved_by || '', r.approved_at ? new Date(r.approved_at).toLocaleDateString('th-TH') : '', r.supervisor_note || '', r.note || ''
+                r.report_id, new Date(r.timestamp).toLocaleString('th-TH'), r.hoscode, r.fullname, r.role, formatThaiMonthYear(r.month), formatThaiDate(r.date),
+                r.subdistrict, r.district, r.province, r.status, r.approved_by || '', r.approved_at ? formatThaiDate(r.approved_at) : '', r.supervisor_note || '', r.note || ''
             ];
             csvContent += rowData.map(item => `"${String(item).replace(/"/g, '""')}"`).join(",") + "\n";
         });
@@ -1230,7 +1572,7 @@
     }
 
     function openReviewModal(reportId, name, month) {
-      currentReviewReportId = reportId; document.getElementById('revName').innerText = name; document.getElementById('revMonth').innerText = month;
+      currentReviewReportId = reportId; document.getElementById('revName').innerText = name; document.getElementById('revMonth').innerText = formatThaiMonthYear(month);
       document.getElementById('revNote').value = ''; document.getElementById('reviewModal').classList.remove('hidden');
     }
 
@@ -1381,7 +1723,7 @@
         // Render Rows
         currentItems.forEach((c, index) => {
             const actualIndex = startIndex + index + 1;
-            const cDate = new Date(c.completion_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            const cDate = formatThaiDate(c.completion_date);
             const fileTypeBadge = c.file_type.includes('pdf') 
                 ? '<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded border border-red-200">PDF</span>' 
                 : '<span class="text-[10px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded border border-sky-200">IMG</span>';
@@ -1436,6 +1778,7 @@
        document.getElementById('modalCertTitle').innerHTML = '<i class="ph-fill ph-certificate text-sky-600"></i> เพิ่มเกียรติบัตร';
        document.getElementById('certName').value = ''; 
        document.getElementById('certDate').value = ''; 
+       document.getElementById('certDateDisplayModal').innerText = 'เลือกวันที่';
        document.getElementById('certFileLabel').innerText = 'คลิกเพื่อเลือกไฟล์ (สูงสุด 5MB)';
        document.getElementById('certFileLabel').classList.replace('text-sky-600', 'text-gray-600');
        document.getElementById('certFileUpload').value = '';
@@ -1454,7 +1797,9 @@
        
        try {
            const d = new Date(cert.completion_date);
-           document.getElementById('certDate').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+           const yyyy_mm_dd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+           document.getElementById('certDate').value = yyyy_mm_dd;
+           document.getElementById('certDateDisplayModal').innerText = formatThaiDate(yyyy_mm_dd);
        } catch(e) {}
        
        document.getElementById('certFileLabel').innerText = 'มีไฟล์แนบเดิมอยู่แล้ว (คลิกเพื่อเปลี่ยนไฟล์ใหม่)';
@@ -1536,7 +1881,7 @@
         const cert = cachedCertificates.find(c => c.cert_id === id);
         if(!cert) return;
 
-        const cDate = new Date(cert.completion_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        const cDate = formatThaiDate(cert.completion_date);
         document.getElementById('viewCertName').innerText = cert.cert_name;
         document.getElementById('viewCertDate').innerHTML = `<i class="ph-fill ph-calendar-blank"></i> สำเร็จเมื่อ: ${cDate}`;
         document.getElementById('viewCertDownloadBtn').href = cert.file_url;
