@@ -722,13 +722,26 @@
 
     const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     
-    function formatThaiMonthYear(yyyy_mm) {
-        if (!yyyy_mm) return '';
+    function formatThaiMonthYear(inputStr) {
+        if (!inputStr) return '';
+        let yyyy_mm = String(inputStr).substring(0, 7);
+        if (String(inputStr).includes('T')) {
+            try {
+                const d = new Date(inputStr);
+                if (!isNaN(d.getTime())) {
+                    yyyy_mm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                }
+            } catch(e){}
+        }
         const parts = yyyy_mm.split('-');
-        if (parts.length !== 2) return yyyy_mm;
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10);
-        return `${thaiMonths[month - 1]} ${year + 543}`;
+        if (parts.length >= 2) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            if (month >= 1 && month <= 12) {
+                return `${thaiMonths[month - 1]} ${year + 543}`;
+            }
+        }
+        return inputStr;
     }
 
     function formatThaiDate(yyyy_mm_dd) {
@@ -888,6 +901,7 @@
       currentUser = null;
       cachedDashboardData = cachedReportsData = cachedAdminUsers = currentEditReportId = currentEditAdminUsername = null;
       cachedCertificates = currentEditCertId = selectedCertFile = null;
+      window.existingDraftFilesMeta = [];
       
       document.getElementById('mainApp').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('flex');
@@ -980,36 +994,45 @@
     }
 
     function renderFileUI(file, desc = '') {
-          const previewArea = document.getElementById('filePreviewArea');
-          const el = document.createElement('div');
-          el.id = file.id;
-          el.className = "flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:border-sky-300 transition-all duration-300 group";
-          
-          let thumb = '';
-          if (file.mimeType && file.mimeType.startsWith('image/')) { 
-             thumb = `<img src="${file.base64}" class="w-24 h-24 object-cover rounded-xl border border-gray-100 shadow-sm flex-shrink-0 cursor-pointer transform group-hover:scale-105 transition-transform" onclick="window.open('${file.base64}')" title="คลิกเพื่อดูรูปภาพ">`; 
-          } else { 
-             thumb = `<div class="w-24 h-24 flex items-center justify-center bg-red-50 rounded-xl border border-red-100 flex-shrink-0 shadow-sm"><i class="ph-fill ph-file-pdf text-5xl text-red-500"></i></div>`; 
-          }
-          
-          el.innerHTML = `
-            ${thumb}
-            <div class="flex-1 w-full min-w-0 flex flex-col justify-center h-full">
-              <div class="flex justify-between items-start mb-3">
-                 <p class="text-sm font-bold text-gray-800 truncate pr-2" title="${file.name}">${file.name}</p>
-                 <span class="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md border border-gray-200 whitespace-nowrap">${file.mimeType.includes('pdf') ? 'PDF' : 'IMAGE'}</span>
-              </div>
-              <div class="relative w-full">
-                 <i class="ph-fill ph-chat-text absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400 text-lg"></i>
-                 <input type="text" class="file-desc w-full border border-gray-300 bg-gray-50 rounded-xl text-sm py-2.5 pl-11 pr-4 outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-50 transition-all placeholder-gray-400 font-medium" placeholder="เพิ่มคำอธิบายรูปภาพ/ใบ CER นี้ (เพื่อแสดงในรายงาน)..." data-id="${file.id}" value="${desc}">
-              </div>
+        const previewArea = document.getElementById('filePreviewArea');
+        const el = document.createElement('div');
+        el.id = file.id;
+        el.className = "flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white border border-gray-200 rounded-2xl p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:border-sky-300 transition-all duration-300 group";
+        
+        let thumb = '';
+        if (file.mimeType && file.mimeType.startsWith('image/')) { 
+            thumb = `<img src="${file.base64}" class="w-24 h-24 object-cover rounded-xl border border-gray-100 shadow-sm flex-shrink-0 cursor-pointer transform group-hover:scale-105 transition-transform" onclick="window.open('${file.base64}')" title="คลิกเพื่อดูรูปภาพ">`; 
+        } else { 
+            thumb = `<div class="w-24 h-24 flex items-center justify-center bg-red-50 rounded-xl border border-red-100 flex-shrink-0 shadow-sm"><i class="ph-fill ph-file-pdf text-5xl text-red-500"></i></div>`; 
+        }
+        
+        el.innerHTML = `
+          ${thumb}
+          <div class="flex-1 w-full min-w-0 flex flex-col justify-center h-full">
+            <div class="flex justify-between items-start mb-3">
+                <p class="text-sm font-bold text-gray-800 truncate pr-2" title="${file.name}">${file.name}</p>
+                <span class="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md border border-gray-200 whitespace-nowrap">${file.mimeType && file.mimeType.includes('pdf') ? 'PDF' : 'IMAGE'}</span>
             </div>
-            <div class="flex sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-               <button type="button" onclick="document.querySelector('input[data-id=\\'${file.id}\\']').focus()" class="flex-1 sm:flex-none text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-100 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"><i class="ph-fill ph-pencil-simple text-base"></i> แก้ไขคำอธิบาย</button>
-               <button type="button" onclick="removeFile('${file.id}')" class="flex-1 sm:flex-none text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"><i class="ph-fill ph-trash text-base"></i> ลบไฟล์ทิ้ง</button>
+            <div class="relative w-full">
+                <i class="ph-fill ph-chat-text absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400 text-lg"></i>
+                <input type="text" class="file-desc w-full border border-gray-300 bg-gray-50 rounded-xl text-sm py-2.5 pl-11 pr-4 outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-50 transition-all placeholder-gray-400 font-medium" placeholder="เพิ่มคำอธิบายรูปภาพ/ไฟล์นี้ (เพื่อแสดงในรายงาน)..." data-id="${file.id}" value="${desc}">
             </div>
-          `;
-          previewArea.appendChild(el);
+          </div>
+          <div class="flex sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+              <button type="button" class="btn-edit-desc flex-1 sm:flex-none text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-100 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"><i class="ph-fill ph-pencil-simple text-base"></i> แก้ไขคำอธิบาย</button>
+              <button type="button" class="btn-delete-file flex-1 sm:flex-none text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"><i class="ph-fill ph-trash text-base"></i> ลบไฟล์ทิ้ง</button>
+          </div>
+        `;
+        
+        // แนบ Event Listener โดยตรง ป้องกัน Syntax Error จาก String Parsing
+        el.querySelector('.btn-edit-desc').addEventListener('click', () => {
+            el.querySelector('.file-desc').focus();
+        });
+        el.querySelector('.btn-delete-file').addEventListener('click', () => {
+            removeFile(file.id);
+        });
+
+        previewArea.appendChild(el);
     }
 
     function removeFile(fileId) {
@@ -1025,7 +1048,7 @@
     }
 
     function updateEmptyState() {
-        if (selectedFiles.length > 0) {
+        if (selectedFiles.length > 0 || (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0)) {
             document.getElementById('emptyFileState').classList.add('hidden');
         } else {
             document.getElementById('emptyFileState').classList.remove('hidden');
@@ -1162,22 +1185,50 @@
 
         let attachmentsHtml = '';
         let imageCount = 0;
+        
+        // 1. นำไฟล์ใหม่มาทำ Preview
         if (selectedFiles && selectedFiles.length > 0) {
             selectedFiles.forEach((f) => {
-                if (f.mimeType.startsWith('image/')) {
-                    imageCount++;
-                    const desc = fileDescriptions[f.id] || '-';
+                imageCount++;
+                const desc = fileDescriptions[f.id] || '-';
+                if (f.mimeType && f.mimeType.startsWith('image/')) {
                     attachmentsHtml += `
                       <div class="page-break"></div>
                       <div class="attachment-container">
                          <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount}</h3>
                          <img src="${f.base64}" class="attachment-img" />
-                         <div class="attachment-desc">
-                             <b>คำอธิบาย:</b> ${desc}
+                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
+                      </div>
+                    `;
+                } else if (f.mimeType && f.mimeType.includes('pdf')) {
+                    attachmentsHtml += `
+                      <div class="page-break"></div>
+                      <div class="attachment-container">
+                         <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF)</h3>
+                         <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px;">
+                            <h4 style="color:#555; font-size:18px;">📄 ${f.name}</h4>
+                            <p style="color:#888; font-size:14px;">(ไฟล์ PDF จะถูกบันทึกเข้าระบบพร้อมกับรายงานหลัก)</p>
                          </div>
+                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
                       </div>
                     `;
                 }
+            });
+        } 
+        // 2. หากไม่มีไฟล์ใหม่ แต่เป็นการแก้ไขร่างที่มีไฟล์อยู่แล้ว
+        else if (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0) {
+            window.existingDraftFilesMeta.forEach((meta) => {
+                imageCount++;
+                attachmentsHtml += `
+                  <div class="page-break"></div>
+                  <div class="attachment-container">
+                     <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (บันทึกร่างไว้แล้ว)</h3>
+                     <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px;">
+                        <h4 style="color:#555; font-size:18px;">📄 ${meta.name || 'ไฟล์แนบเดิม'}</h4>
+                     </div>
+                     <div class="attachment-desc"><b>คำอธิบาย:</b> ${meta.desc || '-'}</div>
+                  </div>
+                `;
             });
         }
 
@@ -1356,13 +1407,23 @@
           }
       });
 
+      // จัดเก็บข้อมูล Meta ของไฟล์เพื่อเวลาดึง Draft กลับมาจะได้มีข้อมูลคำอธิบายด้วย
+      const savedFilesMeta = selectedFiles.map(f => ({
+          id: f.id,
+          name: f.name,
+          mimeType: f.mimeType,
+          desc: fileDescriptions[f.id] || ''
+      }));
+      const finalFilesMeta = (selectedFiles.length > 0) ? savedFilesMeta : (window.existingDraftFilesMeta || []);
+
       const reportData = {
         report_id: currentEditReportId,
         month: document.getElementById('repMonth').value,
         date: document.getElementById('repDate').value,
         inspiration: document.getElementById('repInspiration').value.trim(),
         obstacle: document.getElementById('repObstacle').value.trim(),
-        activities: activities
+        activities: activities,
+        saved_files_meta: finalFilesMeta // ถูกบันทึกลงในฐานข้อมูล (activity_json)
       };
 
       showLoader(isDraft ? 'กำลังบันทึกแบบร่าง...' : 'กำลังประมวลผล... จัดเรียงหน้ากระดาษ A4');
@@ -1385,7 +1446,7 @@
       } catch (error) {
         const errorMsg = error.message.toLowerCase();
         if (errorMsg.includes('load failed') || errorMsg.includes('fetch') || errorMsg.includes('network')) {
-            showToast('สำเร็จ', isDraft ? 'บันทึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
+            showToast('สำเร็จ', isDraft ? 'บันึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
             cachedDashboardData = cachedReportsData = null;
             clearDraft();
             navigateTo('historyView');
@@ -1421,6 +1482,7 @@
 
       document.getElementById('filePreviewArea').innerHTML = '';
       selectedFiles = [];
+      window.existingDraftFilesMeta = [];
       updateEmptyState();
     }
 
@@ -1499,19 +1561,34 @@
        currentEditReportId = reportData.report_id;
        document.getElementById('createReportTitle').innerHTML = `<i class="ph-fill ph-file-text text-amber-500"></i> แก้ไขแบบร่าง: <span class="text-base text-gray-500 font-normal ml-2 bg-gray-100 px-2 py-1 rounded">#${id}</span>`;
 
-       document.getElementById('repMonth').value = reportData.month || '';
-       if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(reportData.month) || 'เลือกเดือน';
-
-       try {
-           const d = new Date(reportData.date);
-           const yyyy = d.getFullYear();
-           const mm = String(d.getMonth() + 1).padStart(2, '0');
-           const dd = String(d.getDate()).padStart(2, '0');
-           document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
-           if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
-       } catch (e) {}
-       
        const parsedJson = reportData.activity_json || {};
+       
+       let safeMonth = parsedJson.month || reportData.month || '';
+       if (String(safeMonth).includes('T')) {
+           try {
+               const d = new Date(safeMonth);
+               if (!isNaN(d.getTime())) {
+                   safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+               }
+           } catch(e){}
+       } else if (String(safeMonth).length > 7) {
+           safeMonth = String(safeMonth).substring(0, 7);
+       }
+       
+       document.getElementById('repMonth').value = safeMonth;
+       if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(safeMonth) || 'เลือกเดือน';
+
+       let safeDate = parsedJson.date || reportData.date || '';
+       try {
+           const d = new Date(safeDate);
+           if (!isNaN(d.getTime())) {
+               const yyyy = d.getFullYear();
+               const mm = String(d.getMonth() + 1).padStart(2, '0');
+               const dd = String(d.getDate()).padStart(2, '0');
+               document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
+               if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
+           }
+       } catch (e) {}
        
        document.getElementById('repInspiration').value = parsedJson.inspiration || '';
        document.getElementById('repObstacle').value = parsedJson.obstacle || '';
@@ -1549,30 +1626,21 @@
            }
        }
        
-       // แสดงรายการไฟล์แนบเดิม (ถ้ามี)
-       let existingUrls = [];
-       const possibleKeys = ['fileUrls', 'file_urls', 'file_url', 'fileurls', 'files'];
-       for (let key of possibleKeys) {
-           if (reportData[key] && typeof reportData[key] === 'string' && reportData[key].startsWith('http')) {
-               existingUrls = reportData[key].split(',');
-               break;
-           }
-       }
-       
-       if (existingUrls.length > 0) {
-           existingUrls.forEach((url, idx) => {
-               if (!url.trim()) return;
+       // ดึงข้อมูลไฟล์แนบเดิมมาแสดงในหน้า UI ให้ครบถ้วน
+       window.existingDraftFilesMeta = parsedJson.saved_files_meta || [];
+       if (window.existingDraftFilesMeta.length > 0) {
+           window.existingDraftFilesMeta.forEach((meta) => {
                const el = document.createElement('div');
-               el.className = "flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm";
+               el.className = "flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm";
                el.innerHTML = `
-                   <div class="w-16 h-16 flex items-center justify-center bg-gray-200 rounded-xl flex-shrink-0">
-                       <i class="ph-fill ph-link text-3xl text-gray-500"></i>
+                   <div class="w-16 h-16 flex items-center justify-center bg-amber-100 rounded-xl flex-shrink-0">
+                       <i class="ph-fill ph-file text-3xl text-amber-600"></i>
                    </div>
-                   <div class="flex-1 min-w-0">
-                       <p class="text-sm font-bold text-gray-800">ไฟล์แนบเดิมที่ ${idx + 1}</p>
-                       <a href="${url}" target="_blank" class="text-xs text-sky-600 hover:underline truncate block w-full">${url}</a>
+                   <div class="flex-1 min-w-0 w-full">
+                       <p class="text-sm font-bold text-gray-800 truncate pr-2">${meta.name || 'ไฟล์แนบเดิม'}</p>
+                       <p class="text-xs text-gray-500 mt-1"><b class="text-gray-700">คำอธิบาย:</b> ${meta.desc || '-'}</p>
                    </div>
-                   <div class="text-xs text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded border border-amber-100 flex-shrink-0">ไฟล์บนระบบ</div>
+                   <div class="text-[10px] sm:text-xs text-amber-600 font-bold bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 flex-shrink-0 mt-2 sm:mt-0">ไฟล์ถูกบันทึกร่างไว้แล้ว</div>
                `;
                document.getElementById('filePreviewArea').appendChild(el);
            });
@@ -1580,7 +1648,7 @@
        }
        
        navigateTo('createReportView');
-       showToast('โหมดแก้ไข', 'ดึงข้อมูลตารางของคุณเรียบร้อยแล้ว (หากเพิ่มไฟล์ใหม่ จะแทนที่ของเดิม)');
+       showToast('โหมดแก้ไข', 'ดึงข้อมูลตารางของคุณเรียบร้อยแล้ว (หากเพิ่มไฟล์ใหม่ จะแทนที่ของเดิมทั้งหมด)');
     }
 
     function exportReportsCSV() {
