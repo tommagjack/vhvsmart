@@ -32,7 +32,7 @@
     .paper-table th { text-align: center; background-color: #f9fafb; font-weight: 600; color: #374151; }
     .paper-input { width: 100%; border: none; border-bottom: 1px dotted #9ca3af; background: transparent; outline: none; padding: 2px 0; }
     .paper-input:focus { border-bottom: 1px solid #0284c7; }
-    .cb-label { display: inline-flex; items-center; gap: 0.25rem; font-size: 0.8rem; color: #4b5563; margin-bottom: 0.25rem; cursor: pointer; }
+    .cb-label { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; color: #4b5563; margin-bottom: 0.25rem; cursor: pointer; }
     .cb-input { margin-top: 0.15rem; }
 
     /* Collapsible Sidebar Styles */
@@ -104,18 +104,21 @@
         <i class="ph ph-caret-left text-sm transition-transform duration-300 group-hover:scale-110" id="sidebarToggleIcon"></i>
       </button>
 
+      <!-- โลโก้ และ ข้อมูลผู้ใช้บนมือถือ -->
       <div class="p-4 border-b border-gray-100 flex items-center justify-between md:justify-center bg-sky-50/50 md:h-[73px]">
         <div class="flex items-center gap-2 text-sky-700 overflow-hidden">
           <i class="ph-fill ph-heartbeat text-3xl flex-shrink-0 drop-shadow-sm"></i>
           <span class="font-bold text-xl hidden md:block sidebar-text">Smart อสม.</span>
         </div>
-        <!-- User Info Mobile -->
+        <!-- User Info Mobile & ปุ่มออกจากระบบบนมือถือ -->
         <div class="md:hidden text-right flex items-center gap-3">
             <div class="text-xs">
                 <p class="font-bold text-gray-800" id="mUserName">User</p>
                 <p class="text-sky-600" id="mUserRole">Role</p>
             </div>
-            <button onclick="logout()" class="text-gray-400 hover:text-red-500 bg-gray-50 p-2 rounded-lg"><i class="ph ph-sign-out text-xl"></i></button>
+            <button onclick="logout()" class="text-red-500 hover:text-white hover:bg-red-500 bg-red-50 p-2 rounded-lg border border-red-100 transition-colors shadow-sm">
+                <i class="ph ph-sign-out text-xl"></i>
+            </button>
         </div>
       </div>
 
@@ -132,39 +135,41 @@
       </div>
 
       <!-- Navigation Links -->
-      <div class="flex-1 overflow-y-auto p-3 flex flex-row md:flex-col justify-around md:justify-start gap-1 custom-nav bg-gray-50/30">
-        <button onclick="navigateTo('dashboardView')" class="nav-btn w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors active-nav group">
+      <div class="flex-1 overflow-x-auto overflow-y-auto p-3 flex flex-row md:flex-col justify-start md:justify-start gap-1 custom-nav bg-gray-50/30 w-full">
+        <button onclick="navigateTo('dashboardView')" class="nav-btn w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors active-nav group min-w-[70px]">
           <i class="ph ph-squares-four text-2xl md:text-xl flex-shrink-0 group-hover:scale-110 transition-transform"></i>
-          <span class="text-[10px] md:text-sm font-semibold sidebar-text">ภาพรวม</span>
+          <span class="text-[10px] md:text-sm font-semibold sidebar-text whitespace-nowrap">ภาพรวม</span>
         </button>
-        <button onclick="navigateTo('createReportView')" class="nav-btn user-only w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors hidden group">
+        <button onclick="navigateTo('createReportView')" class="nav-btn user-only w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors hidden group min-w-[70px]">
           <i class="ph ph-file-plus text-2xl md:text-xl flex-shrink-0 group-hover:scale-110 transition-transform"></i>
-          <span class="text-[10px] md:text-sm font-semibold sidebar-text">สร้างรายงาน</span>
+          <span class="text-[10px] md:text-sm font-semibold sidebar-text whitespace-nowrap">สร้างรายงาน</span>
         </button>
-        <button onclick="navigateTo('historyView')" class="nav-btn w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors group">
+        <button onclick="navigateTo('historyView')" class="nav-btn w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors group min-w-[70px]">
           <i class="ph ph-clock-counter-clockwise text-2xl md:text-xl flex-shrink-0 group-hover:scale-110 transition-transform"></i>
-          <span class="text-[10px] md:text-sm font-semibold sidebar-text">ประวัติงาน</span>
+          <span class="text-[10px] md:text-sm font-semibold sidebar-text whitespace-nowrap">ประวัติงาน</span>
         </button>
-        <button onclick="navigateTo('certificateView')" class="nav-btn w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors group">
+        <button onclick="navigateTo('certificateView')" class="nav-btn w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors group min-w-[70px]">
           <i class="ph ph-certificate text-2xl md:text-xl flex-shrink-0 group-hover:scale-110 transition-transform"></i>
-          <span class="text-[10px] md:text-sm font-semibold sidebar-text">แฟ้มเกียรติบัตร</span>
+          <span class="text-[10px] md:text-sm font-semibold sidebar-text whitespace-nowrap">แฟ้มเกียรติบัตร</span>
         </button>
-        <button onclick="navigateTo('teamView')" class="nav-btn supervisor-only admin-only w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors hidden group">
+        <button onclick="navigateTo('teamView')" class="nav-btn supervisor-only admin-only w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors hidden group min-w-[70px]">
           <i class="ph ph-users text-2xl md:text-xl flex-shrink-0 group-hover:scale-110 transition-transform"></i>
-          <span class="text-[10px] md:text-sm font-semibold sidebar-text">ทีม อสม.</span>
+          <span class="text-[10px] md:text-sm font-semibold sidebar-text whitespace-nowrap">ทีม อสม.</span>
         </button>
-        <button onclick="navigateTo('adminView')" class="nav-btn admin-only w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors hidden group">
+        <button onclick="navigateTo('adminView')" class="nav-btn admin-only w-full flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 p-2.5 md:p-3 rounded-xl text-gray-600 hover:bg-sky-50 hover:text-sky-700 transition-colors hidden group min-w-[70px]">
           <i class="ph ph-gear text-2xl md:text-xl flex-shrink-0 group-hover:scale-110 transition-transform"></i>
-          <span class="text-[10px] md:text-sm font-semibold sidebar-text">ตั้งค่าระบบ</span>
+          <span class="text-[10px] md:text-sm font-semibold sidebar-text whitespace-nowrap">ตั้งค่าระบบ</span>
         </button>
       </div>
 
-      <div class="hidden md:block p-4 border-t border-gray-100 bg-white">
-        <button onclick="logout()" class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors nav-btn group">
+      <!-- ปุ่มออกจากระบบ (สำหรับจอคอมพิวเตอร์ Desktop) -->
+      <div class="hidden md:block p-4 border-t border-gray-100 bg-white mt-auto">
+        <button onclick="logout()" class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors nav-btn group">
           <i class="ph ph-sign-out text-xl flex-shrink-0 group-hover:scale-110 transition-transform"></i>
           <span class="text-sm font-semibold sidebar-text">ออกจากระบบ</span>
         </button>
       </div>
+      
     </nav>
 
     <!-- Main Content Area -->
@@ -980,6 +985,7 @@
       cachedDashboardData = cachedReportsData = cachedAdminUsers = currentEditReportId = currentEditAdminUsername = null;
       cachedCertificates = currentEditCertId = selectedCertFile = null;
       window.existingDraftFilesMeta = [];
+      window.editingOriginalUser = null; // Clear the temporary user override
       
       document.getElementById('mainApp').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('flex');
@@ -1044,7 +1050,6 @@
       let stats = { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };
       
       cachedReportsData.forEach(r => {
-          // ดักจับรูปแบบวันที่ให้เหลือแค่ YYYY-MM เพื่อให้ตรงกับตัวเลือก
           let safeMonth = String(r.month || '');
           if (safeMonth.includes('T')) {
               try {
@@ -1265,6 +1270,9 @@
         const obstacle = document.getElementById('repObstacle').value.trim();
         const manualPageCount = document.getElementById('repAttachmentPageCount').value.trim();
 
+        // Admin might be editing someone else's report
+        const activeUser = window.editingOriginalUser || currentUser;
+
         const cb = (isChecked) => isChecked ? '☑' : '☐';
         const getChecks = (rowId) => {
             let row = activities[rowId] || { withYou: false, fda: false, tools: [] };
@@ -1344,7 +1352,7 @@
               return `<td style="vertical-align:top; padding:4px;">${html}</td>`;
         };
 
-        // ====== จัดเรียงไฟล์แนบตามลำดับหน้าจอ (รวมการลากสลับตำแหน่ง) ======
+        // ====== จัดเรียงไฟล์แนบตามลำดับหน้าจอ ======
         let allAttachments = [];
         const previewNodes = document.getElementById('filePreviewArea').children;
         
@@ -1410,7 +1418,7 @@
                         attachmentsHtml += `
                           <div class="attachment-item">
                              <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount} (บันทึกร่างไว้แล้ว)</h3>
-                             <img src="${imgUrl}" class="${imgClass}" alt="ไม่สามารถแสดงรูปภาพได้ โปรดตรวจสอบสิทธิ์การแชร์" onerror="this.onerror=null; this.outerHTML='<div class=\\'pdf-placeholder\\'><h4 style=\\'color:#555; font-size:16px;\\'>📄 รูปภาพเดิม</h4><p style=\\'color:#888; font-size:12px;\\'>โหลดรูปภาพไม่สำเร็จ แต่อยู่ในระบบแล้ว</p></div>';" />
+                             <img src="${imgUrl}" class="${imgClass}" alt="ไม่สามารถแสดงรูปภาพได้" onerror="this.onerror=null; this.outerHTML='<div class=\\'pdf-placeholder\\'><h4 style=\\'color:#555; font-size:16px;\\'>📄 รูปภาพเดิม</h4><p style=\\'color:#888; font-size:12px;\\'>โหลดรูปภาพไม่สำเร็จ แต่อยู่ในระบบแล้ว</p></div>';" />
                              ${descHtml}
                           </div>
                         `;
@@ -1495,14 +1503,14 @@
                         <td style="width: 50%;"><b>วันที่</b> <span class="dot-field" style="width: 200px;">${formattedDate}</span></td>
                       </tr>
                       <tr>
-                        <td><b>ชื่อ-สกุล</b> <span class="dot-field" style="width: 220px;">${currentUser.fullname}</span></td>
-                        <td><b>สังกัด (รพ.สต./สอน./PCU/อื่นๆ)</b> <span class="dot-field" style="width: 150px;">${currentUser.hoscode}</span></td>
+                        <td><b>ชื่อ-สกุล</b> <span class="dot-field" style="width: 220px;">${activeUser.fullname}</span></td>
+                        <td><b>สังกัด (รพ.สต./สอน./PCU/อื่นๆ)</b> <span class="dot-field" style="width: 150px;">${activeUser.hoscode}</span></td>
                       </tr>
                       <tr>
                         <td colspan="2">
-                          <b>ตำบล</b> <span class="dot-field" style="width: 150px;">${currentUser.subdistrict}</span>
-                          <b>อำเภอ</b> <span class="dot-field" style="width: 150px;">${currentUser.district}</span>
-                          <b>จังหวัด</b> <span class="dot-field" style="width: 150px;">${currentUser.province}</span>
+                          <b>ตำบล</b> <span class="dot-field" style="width: 150px;">${activeUser.subdistrict}</span>
+                          <b>อำเภอ</b> <span class="dot-field" style="width: 150px;">${activeUser.district}</span>
+                          <b>จังหวัด</b> <span class="dot-field" style="width: 150px;">${activeUser.province}</span>
                         </td>
                       </tr>
                     </table>
@@ -1554,7 +1562,7 @@
                              </tr>
                              <tr>
                                <td style="border:none; text-align:right; padding: 4px;">(</td>
-                               <td style="border:none; text-align:center;">${currentUser.fullname}</td>
+                               <td style="border:none; text-align:center;">${activeUser.fullname}</td>
                                <td style="border:none; text-align:left; padding: 4px;">)</td>
                              </tr>
                              <tr>
@@ -1720,6 +1728,7 @@
               return `<td style="vertical-align:top; padding:4px;">${html}</td>`;
         };
 
+        // ดึงไฟล์แนบของรายงานเดิม
         let existingUrls = [];
         const possibleKeys = ['fileUrls', 'file_urls', 'file_url', 'fileurls', 'files'];
         for (let key of possibleKeys) {
@@ -2052,11 +2061,13 @@
         saved_files_meta: finalFilesMeta 
       };
 
+      const targetUser = window.editingOriginalUser || currentUser;
+
       showLoader(isDraft ? 'กำลังบันทึกแบบร่าง...' : 'กำลังประมวลผล... จัดเรียงหน้ากระดาษ A4');
       
       try {
         const payload = {
-          user: currentUser,
+          user: targetUser,
           report: reportData,
           files: selectedFiles,
           isDraft: isDraft
@@ -2085,6 +2096,14 @@
 
     function clearDraft() {
       currentEditReportId = null;
+      window.editingOriginalUser = null;
+
+      document.getElementById('repName').innerText = currentUser.fullname;
+      document.getElementById('repHoscode').innerText = currentUser.hoscode || '-';
+      document.getElementById('repSubdistrict').innerText = currentUser.subdistrict || '-';
+      document.getElementById('repDistrict').innerText = currentUser.district || '-';
+      document.getElementById('repProvince').innerText = currentUser.province || '-';
+      
       document.getElementById('createReportTitle').innerHTML = '<i class="ph-fill ph-file-text text-sky-600"></i> สร้างแบบรายงาน (ใบงาน 1 ป)';
       
       document.querySelectorAll('.paper-result').forEach(el => el.value = '');
@@ -2127,12 +2146,15 @@
           } catch (error) { 
               console.error("Reports Error:", error);
               container.innerHTML = `<div class="p-10 text-center text-red-500 font-bold bg-red-50 rounded-xl">เกิดข้อผิดพลาด: ${error.message}</div>`; 
+              if (document.getElementById('teamReportList')) document.getElementById('teamReportList').innerHTML = container.innerHTML;
               return;
           }
       }
       
-      historyCurrentPage = 1;
-      teamCurrentPage = 1;
+      if (forceRefresh || !cachedReportsData) {
+          historyCurrentPage = 1;
+          teamCurrentPage = 1;
+      }
       renderHistoryList(filterMonth);
       if (currentUser.role !== 'user') renderTeamList(teamFilterMonth);
     }
@@ -2143,7 +2165,18 @@
         
         let filteredReports = cachedReportsData.filter(r => r.fullname === currentUser.fullname);
         if (filterMonth) {
-            filteredReports = filteredReports.filter(r => r.month === filterMonth);
+            filteredReports = filteredReports.filter(r => {
+                let safeMonth = String(r.month || '');
+                if (safeMonth.includes('T')) {
+                    try {
+                        const d = new Date(safeMonth);
+                        if (!isNaN(d.getTime())) safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    } catch(e){}
+                } else if (safeMonth.length > 7) {
+                    safeMonth = safeMonth.substring(0, 7);
+                }
+                return safeMonth === filterMonth;
+            });
         }
 
         if (filteredReports.length === 0) {
@@ -2166,11 +2199,18 @@
 
         currentItems.forEach(r => {
           const rDate = formatThaiDate(r.timestamp.split('T')[0]); 
-          const dispMonth = formatThaiMonthYear(r.month);
+          let safeMonth = String(r.month || '');
+          if (safeMonth.includes('T')) {
+              try {
+                  const d = new Date(safeMonth);
+                  if (!isNaN(d.getTime())) safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+              } catch(e){}
+          }
+          const dispMonth = formatThaiMonthYear(safeMonth);
           const printBtn = `<button onclick="openSavedReportPreview('${r.report_id}')" class="bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-sky-200 hover:border-sky-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-bold ph-printer text-lg"></i> พิมพ์รายงาน</button>`;
           
           let actionBtns = '';
-          if (r.status === 'draft') {
+          if (r.status === 'draft' || currentUser.role === 'admin') {
             actionBtns += `<button onclick="editDraft('${r.report_id}')" class="bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-amber-200 hover:border-amber-500 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-pencil-simple text-lg"></i> แก้ไขฟอร์ม</button>`;
           }
 
@@ -2212,7 +2252,18 @@
         
         let filteredReports = cachedReportsData;
         if (filterMonth) {
-            filteredReports = filteredReports.filter(r => r.month === filterMonth);
+            filteredReports = filteredReports.filter(r => {
+                let safeMonth = String(r.month || '');
+                if (safeMonth.includes('T')) {
+                    try {
+                        const d = new Date(safeMonth);
+                        if (!isNaN(d.getTime())) safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    } catch(e){}
+                } else if (safeMonth.length > 7) {
+                    safeMonth = safeMonth.substring(0, 7);
+                }
+                return safeMonth === filterMonth;
+            });
         }
 
         if (filteredReports.length === 0) {
@@ -2235,14 +2286,22 @@
 
         currentItems.forEach(r => {
           const rDate = formatThaiDate(r.timestamp.split('T')[0]); 
-          const dispMonth = formatThaiMonthYear(r.month);
+          let safeMonth = String(r.month || '');
+          if (safeMonth.includes('T')) {
+              try {
+                  const d = new Date(safeMonth);
+                  if (!isNaN(d.getTime())) safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+              } catch(e){}
+          }
+          const dispMonth = formatThaiMonthYear(safeMonth);
           const printBtn = `<button onclick="openSavedReportPreview('${r.report_id}')" class="bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-sky-200 hover:border-sky-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-bold ph-printer text-lg"></i> พิมพ์รายงาน</button>`;
           
           let actionBtns = '';
-          if (currentUser.role === 'supervisor' && r.status === 'submitted') {
-            actionBtns += `<button onclick="openReviewModal('${r.report_id}', '${r.fullname}', '${r.month}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-magnifying-glass text-lg"></i> พิจารณา</button>`;
+          if ((currentUser.role === 'supervisor' || currentUser.role === 'admin') && r.status === 'submitted') {
+            actionBtns += `<button onclick="openReviewModal('${r.report_id}', '${r.fullname}', '${safeMonth}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-magnifying-glass text-lg"></i> พิจารณา</button>`;
           }
           if (currentUser.role === 'admin') {
+            actionBtns += `<button onclick="editDraft('${r.report_id}')" class="bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-amber-200 hover:border-amber-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-pencil-simple text-lg"></i> แก้ไข</button>`;
             actionBtns += `<button onclick="openDuplicateModal('${r.report_id}')" class="bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-purple-200 hover:border-purple-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-copy text-lg"></i> ทำสำเนา</button>`;
           }
 
@@ -2284,7 +2343,24 @@
        clearDraft(); 
 
        currentEditReportId = reportData.report_id;
-       document.getElementById('createReportTitle').innerHTML = `<i class="ph-fill ph-file-text text-amber-500"></i> แก้ไขแบบร่าง: <span class="text-base text-gray-500 font-normal ml-2 bg-gray-100 px-2 py-1 rounded">#${id}</span>`;
+       
+       window.editingOriginalUser = {
+           fullname: reportData.fullname,
+           hoscode: reportData.hoscode,
+           subdistrict: reportData.subdistrict,
+           district: reportData.district,
+           province: reportData.province,
+           role: reportData.role
+       };
+       
+       document.getElementById('repName').innerText = reportData.fullname || '-';
+       document.getElementById('repHoscode').innerText = reportData.hoscode || '-';
+       document.getElementById('repSubdistrict').innerText = reportData.subdistrict || '-';
+       document.getElementById('repDistrict').innerText = reportData.district || '-';
+       document.getElementById('repProvince').innerText = reportData.province || '-';
+
+       const titleText = currentUser.role === 'admin' ? 'แก้ไขรายงาน (Admin)' : 'แก้ไขแบบร่าง';
+       document.getElementById('createReportTitle').innerHTML = `<i class="ph-fill ph-file-text text-amber-500"></i> ${titleText}: <span class="text-base text-gray-500 font-normal ml-2 bg-gray-100 px-2 py-1 rounded">#${id}</span>`;
 
        const parsedJson = reportData.activity_json || {};
        
