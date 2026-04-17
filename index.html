@@ -1186,74 +1186,85 @@
               return `<td style="vertical-align:top; padding:4px;">${html}</td>`;
         };
 
-        let attachmentsHtml = '';
-        let imageCount = 0;
+        // ====== ระบบจัดเรียงไฟล์แนบใหม่ (2 รูปภาพต่อ 1 หน้า A4) ======
+        let allAttachments = [];
         
-        // 1. นำไฟล์ใหม่มาทำ Preview จัดลง A4
         if (selectedFiles && selectedFiles.length > 0) {
             selectedFiles.forEach((f) => {
-                imageCount++;
-                const desc = fileDescriptions[f.id] || '-';
-                if (f.mimeType && f.mimeType.startsWith('image/')) {
-                    attachmentsHtml += `
-                      <div class="a4-page">
-                         <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount}</h3>
-                         <img src="${f.base64}" class="attachment-img" />
-                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
-                      </div>
-                    `;
-                } else if (f.mimeType && f.mimeType.includes('pdf')) {
-                    attachmentsHtml += `
-                      <div class="a4-page">
-                         <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF)</h3>
-                         <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px; text-align: center;">
-                            <h4 style="color:#555; font-size:18px;">📄 ${f.name}</h4>
-                            <p style="color:#888; font-size:14px;">(ไฟล์ PDF จะถูกบันทึกเข้าระบบพร้อมกับรายงานหลัก ไม่สามารถแสดงรูปตัวอย่างก่อนพิมพ์ได้)</p>
-                         </div>
-                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${desc}</div>
-                      </div>
-                    `;
-                }
+                allAttachments.push({ type: 'new', file: f, desc: fileDescriptions[f.id] || '-' });
             });
-        } 
-        // 2. หากไม่มีไฟล์ใหม่ แต่เป็นการแก้ไขร่างที่มีไฟล์อยู่แล้ว ให้ดึงรูป/PDF มาทำ Preview ด้วย
-        else if (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0) {
+        }
+        
+        if (window.existingDraftFilesMeta && window.existingDraftFilesMeta.length > 0) {
             window.existingDraftFilesMeta.forEach((meta, idx) => {
-                if(meta.deleted) return; // ข้ามไฟล์ที่ถูกลบทิ้งไปแล้ว
-                
-                // อัปเดตคำอธิบายล่าสุดจากช่องกรอก
+                if (meta.deleted) return;
                 const inputObj = document.querySelector(`input[data-draft-idx="${idx}"]`);
                 const currentDesc = inputObj ? inputObj.value.trim() : (meta.desc || '-');
+                allAttachments.push({ type: 'draft', meta: meta, desc: currentDesc });
+            });
+        }
 
+        let attachmentsHtml = '';
+        let imageCount = 0;
+
+        // จัดกลุ่มเอกสารแนบ หน้าละ 2 รายการ
+        for (let i = 0; i < allAttachments.length; i += 2) {
+            const chunk = allAttachments.slice(i, i + 2);
+            attachmentsHtml += `<div class="a4-page attachment-page">`;
+            
+            chunk.forEach(item => {
                 imageCount++;
-                const isImg = meta.mimeType ? meta.mimeType.startsWith('image/') : true;
-                
-                if (isImg && meta.url) {
-                    let imgUrl = meta.url;
-                    // เปลี่ยนจาก uc?id เป็น thumbnail เพื่อให้โหลดรูปภาพจาก Drive ได้เสถียรและพิมพ์ได้
-                    const match = imgUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    if (match) imgUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-                    
-                    attachmentsHtml += `
-                      <div class="a4-page">
-                         <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount} (บันทึกร่างไว้แล้ว)</h3>
-                         <img src="${imgUrl}" class="attachment-img" alt="ไม่สามารถแสดงรูปภาพได้ (ไฟล์อาจถูกตั้งค่าจำกัดสิทธิ์)" />
-                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${currentDesc}</div>
-                      </div>
-                    `;
-                } else {
-                    attachmentsHtml += `
-                      <div class="a4-page">
-                         <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF ฉบับร่าง)</h3>
-                         <div style="border:2px dashed #999; padding:40px; margin: 20px auto; background:#f9f9f9; width: 80%; border-radius: 8px; text-align: center;">
-                            <h4 style="color:#555; font-size:18px;">📄 ${meta.name || 'ไฟล์แนบเดิม'}</h4>
-                            <p style="color:#888; font-size:14px;">(ไฟล์นี้จะถูกแนบพร้อมกับรายงานหลัก)</p>
-                         </div>
-                         <div class="attachment-desc"><b>คำอธิบาย:</b> ${currentDesc}</div>
-                      </div>
-                    `;
+                if (item.type === 'new') {
+                    const f = item.file;
+                    if (f.mimeType && f.mimeType.startsWith('image/')) {
+                        attachmentsHtml += `
+                          <div class="attachment-item">
+                             <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount}</h3>
+                             <img src="${f.base64}" class="attachment-img" />
+                             <div class="attachment-desc"><b>คำอธิบาย:</b> ${item.desc}</div>
+                          </div>
+                        `;
+                    } else if (f.mimeType && f.mimeType.includes('pdf')) {
+                        attachmentsHtml += `
+                          <div class="attachment-item">
+                             <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF)</h3>
+                             <div class="pdf-placeholder">
+                                <h4 style="color:#555; font-size:16px;">📄 ${f.name}</h4>
+                                <p style="color:#888; font-size:12px;">(ไฟล์ PDF จะถูกส่งเข้าระบบ ไม่สามารถแสดงรูปตัวอย่างก่อนพิมพ์ได้)</p>
+                             </div>
+                             <div class="attachment-desc"><b>คำอธิบาย:</b> ${item.desc}</div>
+                          </div>
+                        `;
+                    }
+                } else if (item.type === 'draft') {
+                    const meta = item.meta;
+                    const isImg = meta.mimeType ? meta.mimeType.startsWith('image/') : true;
+                    if (isImg && meta.url) {
+                        let imgUrl = meta.url;
+                        const match = imgUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        if (match) imgUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+                        attachmentsHtml += `
+                          <div class="attachment-item">
+                             <h3 class="attachment-title">เอกสารแนบ / ภาพประกอบที่ ${imageCount} (บันทึกร่างไว้แล้ว)</h3>
+                             <img src="${imgUrl}" class="attachment-img" alt="ไม่สามารถแสดงรูปภาพได้" />
+                             <div class="attachment-desc"><b>คำอธิบาย:</b> ${item.desc}</div>
+                          </div>
+                        `;
+                    } else {
+                        attachmentsHtml += `
+                          <div class="attachment-item">
+                             <h3 class="attachment-title">เอกสารแนบที่ ${imageCount} (ไฟล์ PDF ฉบับร่าง)</h3>
+                             <div class="pdf-placeholder">
+                                <h4 style="color:#555; font-size:16px;">📄 ${meta.name || 'ไฟล์แนบเดิม'}</h4>
+                                <p style="color:#888; font-size:12px;">(ไฟล์นี้แนบอยู่ในแบบร่างแล้ว)</p>
+                             </div>
+                             <div class="attachment-desc"><b>คำอธิบาย:</b> ${item.desc}</div>
+                          </div>
+                        `;
+                    }
                 }
             });
+            attachmentsHtml += `</div>`;
         }
 
         const dDateObj = dateVal ? new Date(dateVal) : new Date();
@@ -1269,7 +1280,8 @@
                   body { font-family: 'Sarabun', Tahoma, sans-serif; font-size: 12px; line-height: 1.3; color: #000; margin: 0; padding: 20px; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 20px; }
                   
                   /* A4 Page Simulation */
-                  .a4-page { width: 210mm; min-height: 297mm; background: white; padding: 1.5cm; box-shadow: 0 4px 10px rgba(0,0,0,0.15); box-sizing: border-box; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+                  .a4-page { width: 210mm; min-height: 297mm; background: white; padding: 1.5cm; box-shadow: 0 4px 10px rgba(0,0,0,0.15); box-sizing: border-box; position: relative; display: block; page-break-after: always; }
+                  .a4-page:last-child { page-break-after: auto; }
                   
                   .header-box { position: absolute; top: 1.5cm; right: 1.5cm; border: 1px solid #000; padding: 2px 10px; text-align: center; font-size: 10px; font-weight: bold; }
                   .logo-container { text-align: center; margin-bottom: 5px; width: 100%; }
@@ -1288,13 +1300,16 @@
                   .remark-text { margin-top: 10px; font-weight: bold; font-size: 10px; text-align: center; width: 100%; }
                   
                   /* Attachment specific styles */
-                  .attachment-title { font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 20px; color: #1f2937; text-align: center; width: 100%; }
-                  .attachment-img { max-width: 100%; max-height: 180mm; width: auto; object-fit: contain; border: 2px solid #e5e7eb; border-radius: 8px; padding: 5px; margin: 0 auto 20px auto; display: block; }
-                  .attachment-desc { font-size: 14px; text-align: left; background: #f0f9ff; padding: 15px 20px; border-radius: 8px; border-left: 4px solid #0284c7; width: 90%; box-sizing: border-box; color: #0f172a; margin-top: auto; }
+                  .attachment-page { display: flex; flex-direction: column; justify-content: flex-start; gap: 20px; }
+                  .attachment-item { flex: 1 1 45%; max-height: 48%; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; page-break-inside: avoid; }
+                  .attachment-title { font-size: 15px; font-weight: bold; text-decoration: underline; margin-bottom: 10px; color: #1f2937; text-align: center; width: 100%; }
+                  .attachment-img { max-width: 100%; max-height: 110mm; width: auto; object-fit: contain; border: 2px solid #e5e7eb; border-radius: 8px; padding: 5px; margin: 0 auto 10px auto; display: block; }
+                  .pdf-placeholder { border: 2px dashed #999; padding: 30px; margin: 10px auto; background: #f9f9f9; width: 80%; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+                  .attachment-desc { font-size: 13px; text-align: left; background: #f0f9ff; padding: 10px 15px; border-radius: 8px; border-left: 4px solid #0284c7; width: 90%; box-sizing: border-box; color: #0f172a; margin-top: auto; }
                   
                   @media print {
                       body { background: white; padding: 0; display: block; gap: 0; }
-                      .a4-page { margin: 0; box-shadow: none; border: none; padding: 1.5cm; width: auto; min-height: auto; page-break-after: always; display: block; }
+                      .a4-page { margin: 0; box-shadow: none; border: none; padding: 1.5cm; width: auto; min-height: auto; page-break-after: always; display: flex; flex-direction: column; justify-content: flex-start; }
                       .a4-page:last-child { page-break-after: auto; }
                       .header-box { top: 1.5cm; right: 1.5cm; }
                   }
@@ -1361,18 +1376,58 @@
                     <div class="bottom-section">
                       <u>หมายเหตุ</u>: มีเอกสารแนบเพิ่มเติม หรือภาพประกอบ จำนวน <span class="dot-field" style="width: 50px; text-align: center;">${imageCount}</span> หน้า (ถ้ามี)
                     </div>
-                    <table class="sig-table">
+                    <table class="sig-table" style="width: 100%; margin-top: 20px; border: none;">
                       <tr>
-                        <td>
-                           ลงชื่อ .................................................... อสม.<br>
-                           ( ${currentUser.fullname} )<br>
-                           วันที่ <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getDate()}</span> / <span class="dot-field" style="width:30px; text-align:center;">${dDateObj.getMonth()+1}</span> / <span class="dot-field" style="width:40px; text-align:center;">${dDateObj.getFullYear()+543}</span>
+                        <td style="width: 50%; vertical-align: top; padding: 0;">
+                           <table style="margin: 0 auto; border: none; width: auto; font-size: 12px;">
+                             <tr>
+                               <td style="border:none; text-align:right; padding: 4px;">ลงชื่อ</td>
+                               <td style="border:none; border-bottom: 1px dotted #000; width: 160px;"></td>
+                               <td style="border:none; text-align:left; padding: 4px;">อสม.</td>
+                             </tr>
+                             <tr>
+                               <td style="border:none; text-align:right; padding: 4px;">(</td>
+                               <td style="border:none; text-align:center;">${currentUser.fullname}</td>
+                               <td style="border:none; text-align:left; padding: 4px;">)</td>
+                             </tr>
+                             <tr>
+                               <td style="border:none; text-align:right; padding: 4px;">วันที่</td>
+                               <td style="border:none; text-align:center; padding: 4px 0;">
+                                  <span style="display:inline-block; width: 30px; border-bottom: 1px dotted #000;">${dDateObj.getDate()}</span> /
+                                  <span style="display:inline-block; width: 30px; border-bottom: 1px dotted #000;">${dDateObj.getMonth()+1}</span> /
+                                  <span style="display:inline-block; width: 40px; border-bottom: 1px dotted #000;">${dDateObj.getFullYear()+543}</span>
+                               </td>
+                               <td style="border:none;"></td>
+                             </tr>
+                           </table>
                         </td>
-                        <td>
-                           ลงชื่อ .................................................... เจ้าหน้าที่ผู้รับผิดชอบ<br>
-                           ( .................................................... )<br>
-                           ตำแหน่ง ....................................................<br>
-                           วันที่ ............ / ............ / ............
+                        <td style="width: 50%; vertical-align: top; padding: 0;">
+                           <table style="margin: 0 auto; border: none; width: auto; font-size: 12px;">
+                             <tr>
+                               <td style="border:none; text-align:right; padding: 4px;">ลงชื่อ</td>
+                               <td style="border:none; border-bottom: 1px dotted #000; width: 160px;"></td>
+                               <td style="border:none; text-align:left; padding: 4px;">เจ้าหน้าที่ผู้รับผิดชอบ</td>
+                             </tr>
+                             <tr>
+                               <td style="border:none; text-align:right; padding: 4px;">(</td>
+                               <td style="border:none; border-bottom: 1px dotted #000;"></td>
+                               <td style="border:none; text-align:left; padding: 4px;">)</td>
+                             </tr>
+                             <tr>
+                               <td style="border:none; text-align:right; padding: 4px;">ตำแหน่ง</td>
+                               <td style="border:none; border-bottom: 1px dotted #000;"></td>
+                               <td style="border:none;"></td>
+                             </tr>
+                             <tr>
+                               <td style="border:none; text-align:right; padding: 4px;">วันที่</td>
+                               <td style="border:none; text-align:center; padding: 4px 0;">
+                                  <span style="display:inline-block; width: 30px; border-bottom: 1px dotted #000;"></span> /
+                                  <span style="display:inline-block; width: 30px; border-bottom: 1px dotted #000;"></span> /
+                                  <span style="display:inline-block; width: 40px; border-bottom: 1px dotted #000;"></span>
+                               </td>
+                               <td style="border:none;"></td>
+                             </tr>
+                           </table>
                         </td>
                       </tr>
                     </table>
