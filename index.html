@@ -624,11 +624,16 @@
         <div id="certificateView" class="view-section is-flex h-full flex-col max-w-7xl mx-auto">
           <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
             <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2"><i class="ph-fill ph-certificate text-sky-600"></i> แฟ้มสะสมเกียรติบัตร</h2>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+                <!-- เพิ่มช่องค้นหา -->
+                <div class="relative flex-1 md:w-64">
+                  <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <input type="text" id="certSearchInput" onkeyup="filterCertificates()" class="w-full border border-gray-200 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-colors shadow-sm" placeholder="ค้นหาชื่อหลักสูตร...">
+                </div>
                 <button onclick="loadCertificates(true)" class="bg-white border border-gray-200 p-2.5 rounded-xl hover:bg-sky-50 hover:text-sky-600 text-gray-500 shadow-sm transition-colors" title="รีเฟรชข้อมูล">
                   <i class="ph ph-arrows-clockwise text-lg"></i>
                 </button>
-                <button onclick="openCertModal()" class="bg-sky-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-sky-700 transition flex items-center gap-2 shadow-sm">
+                <button onclick="openCertModal()" class="bg-sky-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-sky-700 transition flex items-center gap-2 shadow-sm whitespace-nowrap">
                   <i class="ph ph-plus-circle text-xl"></i> เพิ่มเกียรติบัตร
                 </button>
             </div>
@@ -2714,14 +2719,30 @@
             return; 
         }
 
-        const totalItems = cachedCertificates.length;
+        // 1. เรียงลำดับจากใหม่ไปเก่า โดยใช้วันที่สำเร็จ (completion_date)
+        let sortedCerts = [...cachedCertificates].sort((a, b) => new Date(b.completion_date) - new Date(a.completion_date));
+
+        // 2. กรองข้อมูลตามชื่อหลักสูตร (ถ้ามีการพิมพ์ค้นหา)
+        const searchTerm = document.getElementById('certSearchInput').value.trim().toLowerCase();
+        if (searchTerm) {
+            sortedCerts = sortedCerts.filter(c => c.cert_name.toLowerCase().includes(searchTerm));
+        }
+
+        if (sortedCerts.length === 0) {
+            container.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-500">ไม่พบเกียรติบัตรที่ค้นหา</td></tr>';
+            document.getElementById('certPageInfo').innerText = 'แสดง 0 ถึง 0 จาก 0 รายการ';
+            document.getElementById('certPaginationBtns').innerHTML = '';
+            return;
+        }
+
+        const totalItems = sortedCerts.length;
         const totalPages = Math.ceil(totalItems / CERT_ITEMS_PER_PAGE);
         if (certCurrentPage > totalPages) certCurrentPage = totalPages;
         if (certCurrentPage < 1) certCurrentPage = 1;
 
         const startIndex = (certCurrentPage - 1) * CERT_ITEMS_PER_PAGE;
         const endIndex = Math.min(startIndex + CERT_ITEMS_PER_PAGE, totalItems);
-        const currentItems = cachedCertificates.slice(startIndex, endIndex);
+        const currentItems = sortedCerts.slice(startIndex, endIndex);
 
         document.getElementById('certPageInfo').innerText = `แสดง ${startIndex + 1} ถึง ${endIndex} จาก ${totalItems} รายการ`;
 
@@ -2756,6 +2777,11 @@
         });
 
         document.getElementById('certPaginationBtns').innerHTML = generatePaginationHtml(certCurrentPage, totalPages, 'changeCertPage');
+    }
+
+    function filterCertificates() {
+        certCurrentPage = 1;
+        renderCertificates();
     }
 
     function changeCertPage(newPage) {
