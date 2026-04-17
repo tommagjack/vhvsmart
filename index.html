@@ -173,9 +173,14 @@
         
         <!-- === 1. DASHBOARD VIEW === -->
         <div id="dashboardView" class="view-section active h-full max-w-7xl mx-auto">
-          <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-             ภาพรวมปฏิบัติงาน <span class="text-sky-600 text-lg md:text-xl bg-sky-100 px-3 py-1 rounded-lg" id="dashMonth">เดือนนี้</span>
-          </h2>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+               ภาพรวมปฏิบัติงาน <span class="text-sky-600 text-lg md:text-xl bg-sky-100 px-3 py-1 rounded-lg" id="dashMonth">เดือนนี้</span>
+            </h2>
+            <div class="relative">
+              <input type="month" id="dashMonthInput" class="px-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500 shadow-sm font-medium text-gray-700 cursor-pointer" onchange="loadDashboard()">
+            </div>
+          </div>
           
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col transition hover:shadow-md">
@@ -449,8 +454,13 @@
               </button>
             </div>
           </div>
-          <div class="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-0 md:p-2">
-            <div id="reportList" class="divide-y divide-gray-100"></div>
+          <div class="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col p-0 md:p-2">
+            <div id="reportList" class="divide-y divide-gray-100 flex-1"></div>
+            <!-- Pagination Controls for History -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between rounded-b-xl mt-auto">
+               <span class="text-sm text-gray-600" id="historyPageInfo">แสดง 0 ถึง 0 จาก 0 รายการ</span>
+               <div class="flex gap-1" id="historyPaginationBtns"></div>
+            </div>
           </div>
         </div>
 
@@ -458,12 +468,20 @@
         <div id="teamView" class="view-section is-flex h-full flex-col max-w-7xl mx-auto">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
              <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2"><i class="ph-fill ph-users text-sky-600"></i> ตรวจสอบรายงานทีม</h2>
-             <button onclick="exportReportsCSV()" class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-sm">
-               <i class="ph-fill ph-file-csv text-xl"></i> ส่งออกข้อมูล (CSV)
-             </button>
+             <div class="flex gap-2">
+                 <input type="month" id="teamFilterMonth" class="px-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-sky-500 shadow-sm font-medium text-gray-700" onchange="loadReports()">
+                 <button onclick="exportReportsCSV()" class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-sm">
+                   <i class="ph-fill ph-file-csv text-xl"></i> ส่งออกข้อมูล
+                 </button>
+             </div>
           </div>
-          <div class="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-0 md:p-2">
-            <div id="teamReportList" class="divide-y divide-gray-100"></div>
+          <div class="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col p-0 md:p-2">
+            <div id="teamReportList" class="divide-y divide-gray-100 flex-1"></div>
+            <!-- Pagination Controls for Team -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between rounded-b-xl mt-auto">
+               <span class="text-sm text-gray-600" id="teamPageInfo">แสดง 0 ถึง 0 จาก 0 รายการ</span>
+               <div class="flex gap-1" id="teamPaginationBtns"></div>
+            </div>
           </div>
         </div>
 
@@ -493,12 +511,17 @@
         <div id="adminView" class="view-section is-flex h-full flex-col max-w-7xl mx-auto">
           <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
             <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2"><i class="ph-fill ph-gear text-sky-600"></i> จัดการระบบ (Admin)</h2>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+                <!-- ปุ่ม Import CSV -->
+                <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="importUsersCSV(event)">
+                <button onclick="document.getElementById('csvFileInput').click()" class="bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-700 transition flex items-center gap-2 shadow-sm">
+                  <i class="ph-fill ph-upload-simple text-xl"></i> นำเข้าผู้ใช้งาน (CSV)
+                </button>
+                <button onclick="exportUsersCSV()" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm">
+                  <i class="ph-fill ph-download-simple text-xl"></i> ส่งออกผู้ใช้งาน (CSV)
+                </button>
                 <button onclick="loadAdminUsers(true)" class="bg-white border border-gray-200 p-2.5 rounded-xl hover:bg-sky-50 hover:text-sky-600 text-gray-500 shadow-sm transition-colors" title="รีเฟรชข้อมูล">
                   <i class="ph ph-arrows-clockwise text-lg"></i>
-                </button>
-                <button onclick="exportReportsCSV()" class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-sm">
-                  <i class="ph-fill ph-file-csv text-xl"></i> โหลดรายงานรวม (CSV)
                 </button>
             </div>
           </div>
@@ -524,6 +547,11 @@
                    </thead>
                    <tbody id="adminUserList" class="divide-y divide-gray-100"></tbody>
                 </table>
+             </div>
+             <!-- Pagination Controls for Admin Users -->
+             <div class="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between mt-auto">
+                <span class="text-sm text-gray-600" id="userPageInfo">แสดง 0 ถึง 0 จาก 0 รายการ</span>
+                <div class="flex gap-1" id="userPaginationBtns"></div>
              </div>
           </div>
         </div>
@@ -618,7 +646,7 @@
                 </table>
              </div>
              <!-- Pagination Controls -->
-             <div class="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+             <div class="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between mt-auto">
                 <span class="text-sm text-gray-600" id="certPageInfo">แสดง 0 ถึง 0 จาก 0 รายการ</span>
                 <div class="flex gap-1" id="certPaginationBtns">
                     <!-- Pagination buttons injected here -->
@@ -738,14 +766,14 @@
     let cachedReportsData = null;
     let cachedAdminUsers = null;
     
-    // Certificate State
-    let cachedCertificates = null;
-    let currentEditCertId = null;
-    let selectedCertFile = null;
+    // Pagination Variables
+    const ITEMS_PER_PAGE = 15;
+    let historyCurrentPage = 1;
+    let teamCurrentPage = 1;
+    let adminUserCurrentPage = 1;
     let certCurrentPage = 1;
-    const CERT_ITEMS_PER_PAGE = 15;
 
-    let draggedItem = null; // สำหรับจดจำ element ที่กำลังลาก
+    let draggedItem = null;
 
     const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     
@@ -795,6 +823,7 @@
       document.getElementById('repMonth').value = `${yyyy}-${mm}`;
       if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(`${yyyy}-${mm}`);
       document.getElementById('filterMonth').value = ''; 
+      document.getElementById('dashMonthInput').value = `${yyyy}-${mm}`; 
       
       document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
       if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
@@ -870,6 +899,22 @@
 
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
+    }
+
+    // Helper For Pagination Generator
+    function generatePaginationHtml(currentPage, totalPages, changeFnName) {
+        let html = '';
+        html += `<button onclick="${changeFnName}(${currentPage - 1})" class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50" ${currentPage === 1 ? 'disabled' : ''}>ก่อนหน้า</button>`;
+        for(let p = 1; p <= totalPages; p++) {
+            if(p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+                const activeCls = p === currentPage ? 'bg-sky-600 text-white border-sky-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50';
+                html += `<button onclick="${changeFnName}(${p})" class="w-8 py-1 rounded border ${activeCls}">${p}</button>`;
+            } else if (p === currentPage - 2 || p === currentPage + 2) {
+                html += `<span class="px-1 text-gray-400">...</span>`;
+            }
+        }
+        html += `<button onclick="${changeFnName}(${currentPage + 1})" class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50" ${currentPage === totalPages ? 'disabled' : ''}>ถัดไป</button>`;
+        return html;
     }
 
     // ================= API COMMUNICATION =================
@@ -977,24 +1022,36 @@
 
     // ================= DASHBOARD =================
     async function loadDashboard(forceRefresh = false) {
-      if (!forceRefresh && cachedDashboardData) { renderDashboardData(cachedDashboardData); return; }
-      showLoader('โหลดข้อมูล...');
-      try {
-        const stats = await callAPI('getDashboard', { user: currentUser });
-        cachedDashboardData = stats;
-        renderDashboardData(stats);
-      } catch (error) { 
-        console.error("Dashboard Error:", error);
-        showToast('ผิดพลาด', `โหลดข้อมูลไม่ได้: ${error.message}`, 'error'); 
-      } 
-      finally { hideLoader(); }
-    }
+      if (!cachedReportsData || forceRefresh) {
+          showLoader('โหลดข้อมูล...');
+          try {
+              cachedReportsData = await callAPI('getReports', { user: currentUser });
+          } catch(e) {
+              showToast('ผิดพลาด', `โหลดข้อมูลไม่ได้: ${e.message}`, 'error');
+              hideLoader();
+              return;
+          }
+          hideLoader();
+      }
 
-    function renderDashboardData(stats) {
+      const inputMonth = document.getElementById('dashMonthInput').value; 
+      let stats = { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };
+      
+      cachedReportsData.forEach(r => {
+          if (r.month === inputMonth) {
+              stats.total++;
+              if (r.status === 'draft') stats.draft++;
+              if (r.status === 'submitted') stats.submitted++;
+              if (r.status === 'approved') stats.approved++;
+              if (r.status === 'rejected') stats.rejected++;
+          }
+      });
+      
       document.getElementById('statTotal').innerText = stats.total;
       document.getElementById('statDraft').innerText = stats.draft;
       document.getElementById('statSub').innerText = stats.submitted;
       document.getElementById('statApp').innerText = stats.approved;
+      document.getElementById('dashMonth').innerText = formatThaiMonthYear(inputMonth);
     }
 
     // ================= ADVANCED ATTACHMENT HANDLING =================
@@ -1386,6 +1443,8 @@
                   .data-table th { text-align: center; background-color: #f9f9f9; font-weight: bold; }
                   .bottom-section { font-size: 12px; margin-bottom: 6px; width: 100%; text-align: left; }
                   .long-dot { border-bottom: 1px dotted #000; min-height: 16px; display: inline-block; width: 100%; margin-top: 2px; }
+                  .sig-table { width: 100%; margin-top: 15px; text-align: center; border: none; font-size: 12px; }
+                  .sig-table td { width: 50%; padding: 2px; border: none; }
                   .remark-text { margin-top: 10px; font-weight: bold; font-size: 10px; text-align: center; width: 100%; }
                   
                   /* Attachment specific styles */
@@ -1541,218 +1600,6 @@
         iframe.contentWindow.print();
     }
 
-    // ================= SUBMIT REPORT =================
-    async function submitReport(isDraft) {
-      let activities = {};
-      const rows = document.querySelectorAll('#paperTable tbody tr');
-      let hasData = false;
-
-      rows.forEach(row => {
-        const rowId = row.getAttribute('data-row');
-        if (!rowId) return;
-
-        const resultText = row.querySelector('.paper-result').value.trim();
-        const withYou = row.querySelector('.paper-withyou').checked;
-        const fda = row.querySelector('.paper-fda').checked;
-        
-        let tools = [];
-        row.querySelectorAll('.paper-tool:checked').forEach(cb => {
-            if (cb.value.startsWith('อื่นๆ')) {
-                const textInput = cb.closest('label').querySelector('.paper-tool-other');
-                if (textInput && textInput.value.trim() !== '') {
-                    tools.push(textInput.value.trim());
-                }
-            } else {
-                tools.push(cb.value);
-            }
-        });
-
-        if (resultText !== '' || withYou || fda || tools.length > 0) {
-            hasData = true;
-            activities[rowId] = { result: resultText, withYou: withYou, fda: fda, tools: tools };
-        }
-      });
-
-      if (!hasData) {
-        showToast('ข้อมูลว่างเปล่า', 'กรุณากรอกผลงานในตารางอย่างน้อย 1 รายการ', 'error');
-        return;
-      }
-
-      // ดึงข้อมูลและลำดับของไฟล์แนบจากการเรียงบนหน้าจอจริง
-      let finalFilesMeta = [];
-      let reorderedSelectedFiles = [];
-      const previewNodes = document.getElementById('filePreviewArea').children;
-      
-      for (let el of previewNodes) {
-          const itemType = el.getAttribute('data-item-type');
-          const refId = el.getAttribute('data-ref-id');
-          const descInput = el.querySelector('input');
-          const desc = descInput ? descInput.value.trim() : '';
-
-          if (itemType === 'new') {
-              const f = selectedFiles.find(file => file.id === refId);
-              if (f) {
-                  finalFilesMeta.push({ id: f.id, name: f.name, mimeType: f.mimeType, desc: desc, url: '' });
-                  reorderedSelectedFiles.push(f);
-              }
-          } else if (itemType === 'draft') {
-              const idx = parseInt(refId);
-              const meta = window.existingDraftFilesMeta[idx];
-              if (meta && !meta.deleted) {
-                  meta.desc = desc;
-                  finalFilesMeta.push(meta);
-              }
-          }
-      }
-      
-      // สลับลำดับไฟล์ที่จะอัปโหลดจริงให้ตรงกับบนหน้าจอ
-      selectedFiles = reorderedSelectedFiles;
-
-      const reportData = {
-        report_id: currentEditReportId,
-        month: document.getElementById('repMonth').value,
-        date: document.getElementById('repDate').value,
-        inspiration: document.getElementById('repInspiration').value.trim(),
-        obstacle: document.getElementById('repObstacle').value.trim(),
-        attachment_page_count: document.getElementById('repAttachmentPageCount').value.trim(),
-        activities: activities,
-        saved_files_meta: finalFilesMeta 
-      };
-
-      showLoader(isDraft ? 'กำลังบันทึกแบบร่าง...' : 'กำลังประมวลผล... จัดเรียงหน้ากระดาษ A4');
-      
-      try {
-        const payload = {
-          user: currentUser,
-          report: reportData,
-          files: selectedFiles,
-          isDraft: isDraft
-        };
-
-        await callAPI('saveReport', payload);
-        showToast('สำเร็จ', isDraft ? 'บันทึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
-        
-        cachedDashboardData = cachedReportsData = null;
-        clearDraft();
-        navigateTo('historyView');
-      } catch (error) {
-        const errorMsg = error.message.toLowerCase();
-        if (errorMsg.includes('load failed') || errorMsg.includes('fetch') || errorMsg.includes('network')) {
-            showToast('สำเร็จ', isDraft ? 'บันทึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
-            cachedDashboardData = cachedReportsData = null;
-            clearDraft();
-            navigateTo('historyView');
-        } else {
-            showToast('ผิดพลาด', 'เกิดข้อผิดพลาดในการบันทึก: ' + error.message, 'error');
-        }
-      } finally {
-        hideLoader();
-      }
-    }
-
-    function clearDraft() {
-      currentEditReportId = null;
-      document.getElementById('createReportTitle').innerHTML = '<i class="ph-fill ph-file-text text-sky-600"></i> สร้างแบบรายงาน (ใบงาน 1 ป)';
-      
-      document.querySelectorAll('.paper-result').forEach(el => el.value = '');
-      document.querySelectorAll('.cb-input').forEach(el => el.checked = false);
-      document.querySelectorAll('.paper-tool-other').forEach(el => el.value = '');
-      
-      document.getElementById('repInspiration').value = '';
-      document.getElementById('repObstacle').value = '';
-      if(document.getElementById('repAttachmentPageCount')) document.getElementById('repAttachmentPageCount').value = '';
-      
-      const today = new Date();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const yyyy = today.getFullYear();
-      
-      document.getElementById('repMonth').value = `${yyyy}-${mm}`;
-      if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(`${yyyy}-${mm}`);
-      
-      document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
-      if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
-
-      document.getElementById('filePreviewArea').innerHTML = '';
-      selectedFiles = [];
-      window.existingDraftFilesMeta = [];
-      updateEmptyState();
-    }
-
-    // ================= HISTORY & TEAM REPORTS =================
-    async function loadReports(forceRefresh = false) {
-      const listId = currentUser.role === 'user' ? 'reportList' : 'teamReportList';
-      const container = document.getElementById(listId);
-      const filterMonth = document.getElementById('filterMonth').value;
-      
-      if (!forceRefresh && cachedReportsData) { renderReportsList(cachedReportsData, container, filterMonth); return; }
-
-      container.innerHTML = '<div class="p-10 text-center text-gray-500"><i class="ph ph-spinner-gap animate-spin text-4xl mb-3 text-sky-500 inline-block"></i><br>กำลังดึงข้อมูลจากระบบ...</div>';
-      
-      try {
-        const reports = await callAPI('getReports', { user: currentUser });
-        cachedReportsData = reports;
-        renderReportsList(reports, container, filterMonth);
-      } catch (error) { 
-        console.error("Reports Error:", error);
-        container.innerHTML = `<div class="p-10 text-center text-red-500 font-bold bg-red-50 rounded-xl">เกิดข้อผิดพลาด: ${error.message}</div>`; 
-      }
-    }
-
-    function renderReportsList(reports, container, filterMonth) {
-        container.innerHTML = '';
-        let count = 0;
-
-        reports.forEach(r => {
-          const rDate = formatThaiDate(r.timestamp.split('T')[0]); 
-          if (filterMonth && r.month !== filterMonth) return;
-          count++;
-
-          const dispMonth = formatThaiMonthYear(r.month);
-          const printBtn = `<button onclick="openSavedReportPreview('${r.report_id}')" class="bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-sky-200 hover:border-sky-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-bold ph-printer text-lg"></i> พิมพ์รายงาน</button>`;
-          
-          let actionBtns = '';
-          if (currentUser.role === 'user' && r.status === 'draft') {
-            actionBtns += `<button onclick="editDraft('${r.report_id}')" class="bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-amber-200 hover:border-amber-500 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-pencil-simple text-lg"></i> แก้ไขฟอร์ม</button>`;
-          }
-          if (currentUser.role === 'supervisor' && r.status === 'submitted') {
-            actionBtns += `<button onclick="openReviewModal('${r.report_id}', '${r.fullname}', '${r.month}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-magnifying-glass text-lg"></i> พิจารณา</button>`;
-          }
-          if (currentUser.role === 'admin') {
-            actionBtns += `<button onclick="openDuplicateModal('${r.report_id}')" class="bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-purple-200 hover:border-purple-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-copy text-lg"></i> ทำสำเนา</button>`;
-          }
-
-          const card = document.createElement('div');
-          card.className = "p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-sky-50/50 transition-colors group";
-          card.innerHTML = `
-            <div class="flex-1">
-              <div class="flex flex-wrap items-center gap-3 mb-2">
-                <span class="font-bold text-gray-800 text-lg group-hover:text-sky-700 transition-colors">${r.fullname}</span>
-                ${getStatusBadge(r.status)}
-              </div>
-              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
-                  <span class="flex items-center gap-1"><i class="ph-fill ph-calendar-blank text-gray-400"></i> ${dispMonth}</span>
-                  <span class="flex items-center gap-1"><i class="ph-fill ph-clock text-gray-400"></i> ส่งเมื่อ: ${rDate}</span>
-                  <span class="flex items-center gap-1"><i class="ph-fill ph-barcode text-gray-400"></i> รหัส: ${r.report_id.split('-')[2] || r.report_id}</span>
-              </div>
-              ${r.supervisor_note ? `<div class="mt-3 bg-red-50 text-red-700 p-2.5 rounded-lg text-sm border border-red-100 flex items-start gap-2"><i class="ph-fill ph-warning-circle mt-0.5 text-lg"></i> <div><b>หมายเหตุหัวหน้า:</b> ${r.supervisor_note}</div></div>` : ''}
-            </div>
-            <div class="flex sm:flex-col lg:flex-row items-stretch md:items-center gap-2 border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
-               ${printBtn}
-               ${actionBtns}
-            </div>
-          `;
-          container.appendChild(card);
-        });
-
-        if (count === 0) container.innerHTML = '<div class="p-10 text-center flex flex-col items-center justify-center"><i class="ph-fill ph-folder-dashed text-6xl text-gray-300 mb-3"></i><span class="text-gray-500 font-medium text-lg">ไม่พบข้อมูลรายงานในเดือนที่เลือก</span></div>';
-    }
-
-    function printIframe() {
-        const iframe = document.getElementById('previewIframe');
-        iframe.contentWindow.print();
-    }
-
     // ================= PREVIEW SAVED REPORT =================
     function openSavedReportPreview(id) {
         const reportData = cachedReportsData.find(r => r.report_id === id);
@@ -1856,7 +1703,6 @@
               return `<td style="vertical-align:top; padding:4px;">${html}</td>`;
         };
 
-        // ดึงไฟล์แนบของรายงานเดิม
         let existingUrls = [];
         const possibleKeys = ['fileUrls', 'file_urls', 'file_url', 'fileurls', 'files'];
         for (let key of possibleKeys) {
@@ -2104,6 +1950,316 @@
         document.getElementById('printPreviewModal').classList.remove('hidden');
     }
 
+    // ================= SUBMIT REPORT =================
+    async function submitReport(isDraft) {
+      let activities = {};
+      const rows = document.querySelectorAll('#paperTable tbody tr');
+      let hasData = false;
+
+      rows.forEach(row => {
+        const rowId = row.getAttribute('data-row');
+        if (!rowId) return;
+
+        const resultText = row.querySelector('.paper-result').value.trim();
+        const withYou = row.querySelector('.paper-withyou').checked;
+        const fda = row.querySelector('.paper-fda').checked;
+        
+        let tools = [];
+        row.querySelectorAll('.paper-tool:checked').forEach(cb => {
+            if (cb.value.startsWith('อื่นๆ')) {
+                const textInput = cb.closest('label').querySelector('.paper-tool-other');
+                if (textInput && textInput.value.trim() !== '') {
+                    tools.push(textInput.value.trim());
+                }
+            } else {
+                tools.push(cb.value);
+            }
+        });
+
+        if (resultText !== '' || withYou || fda || tools.length > 0) {
+            hasData = true;
+            activities[rowId] = { result: resultText, withYou: withYou, fda: fda, tools: tools };
+        }
+      });
+
+      if (!hasData) {
+        showToast('ข้อมูลว่างเปล่า', 'กรุณากรอกผลงานในตารางอย่างน้อย 1 รายการ', 'error');
+        return;
+      }
+
+      let fileDescriptions = {};
+      document.querySelectorAll('.file-desc').forEach(input => {
+          if (input.value.trim() !== '') {
+              fileDescriptions[input.getAttribute('data-id')] = input.value.trim();
+          }
+      });
+
+      // รวบรวมข้อมูล Meta ของไฟล์ทั้งหมด โดยให้คงของเดิมไว้ และต่อด้วยของใหม่
+      let finalFilesMeta = [];
+      let reorderedSelectedFiles = [];
+      const previewNodes = document.getElementById('filePreviewArea').children;
+      
+      for (let el of previewNodes) {
+          const itemType = el.getAttribute('data-item-type');
+          const refId = el.getAttribute('data-ref-id');
+          const descInput = el.querySelector('input');
+          const desc = descInput ? descInput.value.trim() : '';
+
+          if (itemType === 'new') {
+              const f = selectedFiles.find(file => file.id === refId);
+              if (f) {
+                  finalFilesMeta.push({ id: f.id, name: f.name, mimeType: f.mimeType, desc: desc, url: '' });
+                  reorderedSelectedFiles.push(f);
+              }
+          } else if (itemType === 'draft') {
+              const idx = parseInt(refId);
+              const meta = window.existingDraftFilesMeta[idx];
+              if (meta && !meta.deleted) {
+                  meta.desc = desc;
+                  finalFilesMeta.push(meta);
+              }
+          }
+      }
+      
+      // สลับลำดับไฟล์ที่จะอัปโหลดจริงให้ตรงกับบนหน้าจอ
+      selectedFiles = reorderedSelectedFiles;
+
+      const reportData = {
+        report_id: currentEditReportId,
+        month: document.getElementById('repMonth').value,
+        date: document.getElementById('repDate').value,
+        inspiration: document.getElementById('repInspiration').value.trim(),
+        obstacle: document.getElementById('repObstacle').value.trim(),
+        attachment_page_count: document.getElementById('repAttachmentPageCount').value.trim(),
+        activities: activities,
+        saved_files_meta: finalFilesMeta 
+      };
+
+      showLoader(isDraft ? 'กำลังบันทึกแบบร่าง...' : 'กำลังประมวลผล... จัดเรียงหน้ากระดาษ A4');
+      
+      try {
+        const payload = {
+          user: currentUser,
+          report: reportData,
+          files: selectedFiles,
+          isDraft: isDraft
+        };
+
+        await callAPI('saveReport', payload);
+        showToast('สำเร็จ', isDraft ? 'บันทึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
+        
+        cachedDashboardData = cachedReportsData = null;
+        clearDraft();
+        navigateTo('historyView');
+      } catch (error) {
+        const errorMsg = error.message.toLowerCase();
+        if (errorMsg.includes('load failed') || errorMsg.includes('fetch') || errorMsg.includes('network')) {
+            showToast('สำเร็จ', isDraft ? 'บันทึกแบบร่างเรียบร้อย' : 'ส่งรายงานเรียบร้อยแล้ว');
+            cachedDashboardData = cachedReportsData = null;
+            clearDraft();
+            navigateTo('historyView');
+        } else {
+            showToast('ผิดพลาด', 'เกิดข้อผิดพลาดในการบันทึก: ' + error.message, 'error');
+        }
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function clearDraft() {
+      currentEditReportId = null;
+      document.getElementById('createReportTitle').innerHTML = '<i class="ph-fill ph-file-text text-sky-600"></i> สร้างแบบรายงาน (ใบงาน 1 ป)';
+      
+      document.querySelectorAll('.paper-result').forEach(el => el.value = '');
+      document.querySelectorAll('.cb-input').forEach(el => el.checked = false);
+      document.querySelectorAll('.paper-tool-other').forEach(el => el.value = '');
+      
+      document.getElementById('repInspiration').value = '';
+      document.getElementById('repObstacle').value = '';
+      if(document.getElementById('repAttachmentPageCount')) document.getElementById('repAttachmentPageCount').value = '';
+      
+      const today = new Date();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      
+      document.getElementById('repMonth').value = `${yyyy}-${mm}`;
+      if(document.getElementById('repMonthDisplay')) document.getElementById('repMonthDisplay').innerText = formatThaiMonthYear(`${yyyy}-${mm}`);
+      
+      document.getElementById('repDate').value = `${yyyy}-${mm}-${dd}`;
+      if(document.getElementById('repDateDisplay')) document.getElementById('repDateDisplay').innerText = formatThaiDate(`${yyyy}-${mm}-${dd}`);
+
+      document.getElementById('filePreviewArea').innerHTML = '';
+      selectedFiles = [];
+      window.existingDraftFilesMeta = [];
+      updateEmptyState();
+    }
+
+    // ================= HISTORY & TEAM REPORTS =================
+    async function loadReports(forceRefresh = false) {
+      const listId = currentUser.role === 'user' ? 'reportList' : 'teamReportList';
+      const container = document.getElementById(listId);
+      const filterMonth = document.getElementById('filterMonth').value;
+      const teamFilterMonth = document.getElementById('teamFilterMonth') ? document.getElementById('teamFilterMonth').value : '';
+      
+      if (!cachedReportsData || forceRefresh) {
+          container.innerHTML = '<div class="p-10 text-center text-gray-500"><i class="ph ph-spinner-gap animate-spin text-4xl mb-3 text-sky-500 inline-block"></i><br>กำลังดึงข้อมูลจากระบบ...</div>';
+          if (document.getElementById('teamReportList')) document.getElementById('teamReportList').innerHTML = container.innerHTML;
+          try {
+              cachedReportsData = await callAPI('getReports', { user: currentUser });
+          } catch (error) { 
+              console.error("Reports Error:", error);
+              container.innerHTML = `<div class="p-10 text-center text-red-500 font-bold bg-red-50 rounded-xl">เกิดข้อผิดพลาด: ${error.message}</div>`; 
+              return;
+          }
+      }
+      
+      historyCurrentPage = 1;
+      teamCurrentPage = 1;
+      renderHistoryList(filterMonth);
+      if (currentUser.role !== 'user') renderTeamList(teamFilterMonth);
+    }
+
+    function renderHistoryList(filterMonth) {
+        const container = document.getElementById('reportList');
+        container.innerHTML = '';
+        
+        let filteredReports = cachedReportsData.filter(r => r.fullname === currentUser.fullname);
+        if (filterMonth) {
+            filteredReports = filteredReports.filter(r => r.month === filterMonth);
+        }
+
+        if (filteredReports.length === 0) {
+            container.innerHTML = '<div class="p-10 text-center flex flex-col items-center justify-center h-full"><i class="ph-fill ph-folder-dashed text-6xl text-gray-300 mb-3"></i><span class="text-gray-500 font-medium text-lg">ไม่พบข้อมูลรายงานในเดือนที่เลือก</span></div>';
+            document.getElementById('historyPageInfo').innerText = 'แสดง 0 ถึง 0 จาก 0 รายการ';
+            document.getElementById('historyPaginationBtns').innerHTML = '';
+            return;
+        }
+
+        const totalItems = filteredReports.length;
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+        if (historyCurrentPage > totalPages) historyCurrentPage = totalPages;
+        if (historyCurrentPage < 1) historyCurrentPage = 1;
+
+        const startIndex = (historyCurrentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+        const currentItems = filteredReports.slice(startIndex, endIndex);
+
+        document.getElementById('historyPageInfo').innerText = `แสดง ${startIndex + 1} ถึง ${endIndex} จาก ${totalItems} รายการ`;
+
+        currentItems.forEach(r => {
+          const rDate = formatThaiDate(r.timestamp.split('T')[0]); 
+          const dispMonth = formatThaiMonthYear(r.month);
+          const printBtn = `<button onclick="openSavedReportPreview('${r.report_id}')" class="bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-sky-200 hover:border-sky-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-bold ph-printer text-lg"></i> พิมพ์รายงาน</button>`;
+          
+          let actionBtns = '';
+          if (r.status === 'draft') {
+            actionBtns += `<button onclick="editDraft('${r.report_id}')" class="bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-amber-200 hover:border-amber-500 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-pencil-simple text-lg"></i> แก้ไขฟอร์ม</button>`;
+          }
+
+          const card = document.createElement('div');
+          card.className = "p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-sky-50/50 transition-colors group";
+          card.innerHTML = `
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-3 mb-2">
+                <span class="font-bold text-gray-800 text-lg group-hover:text-sky-700 transition-colors">${r.fullname}</span>
+                ${getStatusBadge(r.status)}
+              </div>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
+                  <span class="flex items-center gap-1"><i class="ph-fill ph-calendar-blank text-gray-400"></i> ${dispMonth}</span>
+                  <span class="flex items-center gap-1"><i class="ph-fill ph-clock text-gray-400"></i> ส่งเมื่อ: ${rDate}</span>
+                  <span class="flex items-center gap-1"><i class="ph-fill ph-barcode text-gray-400"></i> รหัส: ${r.report_id.split('-')[2] || r.report_id}</span>
+              </div>
+              ${r.supervisor_note ? `<div class="mt-3 bg-red-50 text-red-700 p-2.5 rounded-lg text-sm border border-red-100 flex items-start gap-2"><i class="ph-fill ph-warning-circle mt-0.5 text-lg"></i> <div><b>หมายเหตุหัวหน้า:</b> ${r.supervisor_note}</div></div>` : ''}
+            </div>
+            <div class="flex sm:flex-col lg:flex-row items-stretch md:items-center gap-2 border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
+               ${printBtn}
+               ${actionBtns}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        document.getElementById('historyPaginationBtns').innerHTML = generatePaginationHtml(historyCurrentPage, totalPages, 'changeHistoryPage');
+    }
+
+    function changeHistoryPage(newPage) {
+        historyCurrentPage = newPage;
+        renderHistoryList(document.getElementById('filterMonth').value);
+    }
+
+    function renderTeamList(filterMonth) {
+        const container = document.getElementById('teamReportList');
+        if(!container) return;
+        container.innerHTML = '';
+        
+        let filteredReports = cachedReportsData;
+        if (filterMonth) {
+            filteredReports = filteredReports.filter(r => r.month === filterMonth);
+        }
+
+        if (filteredReports.length === 0) {
+            container.innerHTML = '<div class="p-10 text-center flex flex-col items-center justify-center h-full"><i class="ph-fill ph-folder-dashed text-6xl text-gray-300 mb-3"></i><span class="text-gray-500 font-medium text-lg">ไม่พบข้อมูลรายงานในเดือนที่เลือก</span></div>';
+            document.getElementById('teamPageInfo').innerText = 'แสดง 0 ถึง 0 จาก 0 รายการ';
+            document.getElementById('teamPaginationBtns').innerHTML = '';
+            return;
+        }
+
+        const totalItems = filteredReports.length;
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+        if (teamCurrentPage > totalPages) teamCurrentPage = totalPages;
+        if (teamCurrentPage < 1) teamCurrentPage = 1;
+
+        const startIndex = (teamCurrentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+        const currentItems = filteredReports.slice(startIndex, endIndex);
+
+        document.getElementById('teamPageInfo').innerText = `แสดง ${startIndex + 1} ถึง ${endIndex} จาก ${totalItems} รายการ`;
+
+        currentItems.forEach(r => {
+          const rDate = formatThaiDate(r.timestamp.split('T')[0]); 
+          const dispMonth = formatThaiMonthYear(r.month);
+          const printBtn = `<button onclick="openSavedReportPreview('${r.report_id}')" class="bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-sky-200 hover:border-sky-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-bold ph-printer text-lg"></i> พิมพ์รายงาน</button>`;
+          
+          let actionBtns = '';
+          if (currentUser.role === 'supervisor' && r.status === 'submitted') {
+            actionBtns += `<button onclick="openReviewModal('${r.report_id}', '${r.fullname}', '${r.month}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-magnifying-glass text-lg"></i> พิจารณา</button>`;
+          }
+          if (currentUser.role === 'admin') {
+            actionBtns += `<button onclick="openDuplicateModal('${r.report_id}')" class="bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white px-4 py-2 rounded-xl text-sm font-bold border border-purple-200 hover:border-purple-600 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"><i class="ph-fill ph-copy text-lg"></i> ทำสำเนา</button>`;
+          }
+
+          const card = document.createElement('div');
+          card.className = "p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-sky-50/50 transition-colors group";
+          card.innerHTML = `
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-3 mb-2">
+                <span class="font-bold text-gray-800 text-lg group-hover:text-sky-700 transition-colors">${r.fullname}</span>
+                ${getStatusBadge(r.status)}
+              </div>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
+                  <span class="flex items-center gap-1"><i class="ph-fill ph-calendar-blank text-gray-400"></i> ${dispMonth}</span>
+                  <span class="flex items-center gap-1"><i class="ph-fill ph-clock text-gray-400"></i> ส่งเมื่อ: ${rDate}</span>
+                  <span class="flex items-center gap-1"><i class="ph-fill ph-barcode text-gray-400"></i> รหัส: ${r.report_id.split('-')[2] || r.report_id}</span>
+              </div>
+              ${r.supervisor_note ? `<div class="mt-3 bg-red-50 text-red-700 p-2.5 rounded-lg text-sm border border-red-100 flex items-start gap-2"><i class="ph-fill ph-warning-circle mt-0.5 text-lg"></i> <div><b>หมายเหตุหัวหน้า:</b> ${r.supervisor_note}</div></div>` : ''}
+            </div>
+            <div class="flex sm:flex-col lg:flex-row items-stretch md:items-center gap-2 border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
+               ${printBtn}
+               ${actionBtns}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        document.getElementById('teamPaginationBtns').innerHTML = generatePaginationHtml(teamCurrentPage, totalPages, 'changeTeamPage');
+    }
+
+    function changeTeamPage(newPage) {
+        teamCurrentPage = newPage;
+        renderTeamList(document.getElementById('teamFilterMonth').value);
+    }
+
     function editDraft(id) {
        const reportData = cachedReportsData.find(r => r.report_id === id);
        if (!reportData) { showToast('ผิดพลาด', 'ไม่พบข้อมูลรายงานแบบร่าง', 'error'); return; }
@@ -2247,18 +2403,39 @@
     // ================= ADMIN: MANAGE USERS =================
     async function loadAdminUsers(forceRefresh = false) {
        const container = document.getElementById('adminUserList');
-       if (!forceRefresh && cachedAdminUsers) { renderAdminUsers(cachedAdminUsers); return; }
+       if (!forceRefresh && cachedAdminUsers) { renderAdminUsers(); return; }
        container.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-500"><i class="ph ph-spinner animate-spin text-2xl mb-2 inline-block"></i><br>กำลังโหลดรายชื่อผู้ใช้...</td></tr>';
        try {
-           const users = await callAPI('getUsers', {}); cachedAdminUsers = users; renderAdminUsers(users);
+           const users = await callAPI('getUsers', {}); 
+           cachedAdminUsers = users; 
+           adminUserCurrentPage = 1;
+           renderAdminUsers();
        } catch (error) { container.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-500 font-bold">ไม่สามารถโหลดได้: ${error.message}</td></tr>`; }
     }
 
-    function renderAdminUsers(users) {
-       const container = document.getElementById('adminUserList'); container.innerHTML = '';
-       if (!users || users.length === 0) { container.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-500">ยังไม่มีผู้ใช้งานในระบบ</td></tr>'; return; }
-       users.forEach(u => {
-           if (u.username === 'admin') return; 
+    function renderAdminUsers() {
+       const container = document.getElementById('adminUserList'); 
+       container.innerHTML = '';
+       if (!cachedAdminUsers || cachedAdminUsers.length === 0) { 
+           container.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-500">ยังไม่มีผู้ใช้งานในระบบ</td></tr>'; 
+           document.getElementById('userPageInfo').innerText = 'แสดง 0 ถึง 0 จาก 0 รายการ';
+           document.getElementById('userPaginationBtns').innerHTML = '';
+           return; 
+       }
+
+       const filteredUsers = cachedAdminUsers.filter(u => u.username !== 'admin');
+       const totalItems = filteredUsers.length;
+       const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+       if (adminUserCurrentPage > totalPages) adminUserCurrentPage = totalPages;
+       if (adminUserCurrentPage < 1) adminUserCurrentPage = 1;
+
+       const startIndex = (adminUserCurrentPage - 1) * ITEMS_PER_PAGE;
+       const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+       const currentItems = filteredUsers.slice(startIndex, endIndex);
+
+       document.getElementById('userPageInfo').innerText = `แสดง ${startIndex + 1} ถึง ${endIndex} จาก ${totalItems} รายการ`;
+
+       currentItems.forEach(u => {
            const roleText = u.role === 'admin' ? '<span class="text-purple-700 bg-purple-100 border border-purple-200 px-3 py-1 rounded-lg text-xs font-bold shadow-sm">ผู้ดูแลระบบ</span>' : 
                            (u.role === 'supervisor' ? '<span class="text-blue-700 bg-blue-100 border border-blue-200 px-3 py-1 rounded-lg text-xs font-bold shadow-sm">หัวหน้า อสม.</span>' : 
                            '<span class="text-green-700 bg-green-100 border border-green-200 px-3 py-1 rounded-lg text-xs font-bold shadow-sm">อสม. พื้นที่</span>');
@@ -2279,6 +2456,13 @@
            `;
            container.appendChild(tr);
        });
+
+       document.getElementById('userPaginationBtns').innerHTML = generatePaginationHtml(adminUserCurrentPage, totalPages, 'changeAdminUserPage');
+    }
+
+    function changeAdminUserPage(newPage) {
+        adminUserCurrentPage = newPage;
+        renderAdminUsers();
     }
 
     function openUserModal() {
@@ -2336,6 +2520,79 @@
         } catch(err) {
             showToast('ผิดพลาด', err.message, 'error');
         } finally { hideLoader(); }
+    }
+
+    function exportUsersCSV() {
+        if (!cachedAdminUsers || cachedAdminUsers.length === 0) { showToast('ผิดพลาด', 'ไม่มีข้อมูลสำหรับส่งออก', 'error'); return; }
+        let csvContent = "\uFEFF"; 
+        const headers = ['Username', 'Password', 'ชื่อ-สกุล', 'Role', 'HOSCODE', 'ตำบล', 'อำเภอ', 'จังหวัด'];
+        csvContent += headers.join(",") + "\n";
+        
+        cachedAdminUsers.forEach(u => {
+            const rowData = [u.username, u.password || '', u.fullname, u.role, u.hoscode, u.subdistrict, u.district, u.province];
+            csvContent += rowData.map(item => `"${String(item || '').replace(/"/g, '""')}"`).join(",") + "\n";
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Users_Export_${new Date().getTime()}.csv`;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+
+    async function importUsersCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        showLoader('กำลังนำเข้าข้อมูลผู้ใช้งาน...');
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const text = e.target.result;
+            const lines = text.split(/\r?\n/);
+            const usersToImport = [];
+            
+            for(let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if(!line) continue;
+                
+                const cols = [];
+                let currentWord = '';
+                let insideQuotes = false;
+                
+                for (let char of line) {
+                    if (char === '"' && insideQuotes) { insideQuotes = false; }
+                    else if (char === '"' && !insideQuotes) { insideQuotes = true; }
+                    else if (char === ',' && !insideQuotes) { cols.push(currentWord); currentWord = ''; }
+                    else { currentWord += char; }
+                }
+                cols.push(currentWord);
+                
+                if(cols.length >= 3 && cols[0]) {
+                    usersToImport.push({
+                        username: cols[0],
+                        password: cols[1] || '',
+                        fullname: cols[2] || '',
+                        role: cols[3] || 'user',
+                        hoscode: cols[4] || '',
+                        subdistrict: cols[5] || '',
+                        district: cols[6] || '',
+                        province: cols[7] || ''
+                    });
+                }
+            }
+            
+            try {
+                await callAPI('bulkSaveUsers', { users: usersToImport });
+                showToast('สำเร็จ', `นำเข้าผู้ใช้งานทั้งหมด ${usersToImport.length} รายการ เรียบร้อยแล้ว`);
+                cachedAdminUsers = null;
+                loadAdminUsers(true);
+            } catch(err) {
+                showToast('ผิดพลาด', err.message, 'error');
+            }
+            hideLoader();
+        };
+        reader.readAsText(file, 'UTF-8');
+        event.target.value = ''; 
     }
 
     // ================= CERTIFICATE MANAGEMENT =================
@@ -2405,18 +2662,7 @@
             container.appendChild(tr);
         });
 
-        let pageBtns = '';
-        pageBtns += `<button onclick="changeCertPage(${certCurrentPage - 1})" class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50" ${certCurrentPage === 1 ? 'disabled' : ''}>ก่อนหน้า</button>`;
-        for(let p = 1; p <= totalPages; p++) {
-            if(p === 1 || p === totalPages || (p >= certCurrentPage - 1 && p <= certCurrentPage + 1)) {
-                const activeCls = p === certCurrentPage ? 'bg-sky-600 text-white border-sky-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50';
-                pageBtns += `<button onclick="changeCertPage(${p})" class="w-8 py-1 rounded border ${activeCls}">${p}</button>`;
-            } else if (p === certCurrentPage - 2 || p === certCurrentPage + 2) {
-                pageBtns += `<span class="px-1 text-gray-400">...</span>`;
-            }
-        }
-        pageBtns += `<button onclick="changeCertPage(${certCurrentPage + 1})" class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50" ${certCurrentPage === totalPages ? 'disabled' : ''}>ถัดไป</button>`;
-        document.getElementById('certPaginationBtns').innerHTML = pageBtns;
+        document.getElementById('certPaginationBtns').innerHTML = generatePaginationHtml(certCurrentPage, totalPages, 'changeCertPage');
     }
 
     function changeCertPage(newPage) {
