@@ -766,8 +766,14 @@
     let cachedReportsData = null;
     let cachedAdminUsers = null;
     
+    // Certificate State
+    let cachedCertificates = null;
+    let currentEditCertId = null;
+    let selectedCertFile = null;
+    
     // Pagination Variables
     const ITEMS_PER_PAGE = 15;
+    const CERT_ITEMS_PER_PAGE = 15;
     let historyCurrentPage = 1;
     let teamCurrentPage = 1;
     let adminUserCurrentPage = 1;
@@ -1038,7 +1044,18 @@
       let stats = { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };
       
       cachedReportsData.forEach(r => {
-          if (r.month === inputMonth) {
+          // ดักจับรูปแบบวันที่ให้เหลือแค่ YYYY-MM เพื่อให้ตรงกับตัวเลือก
+          let safeMonth = String(r.month || '');
+          if (safeMonth.includes('T')) {
+              try {
+                  const d = new Date(safeMonth);
+                  if (!isNaN(d.getTime())) safeMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+              } catch(e){}
+          } else if (safeMonth.length > 7) {
+              safeMonth = safeMonth.substring(0, 7);
+          }
+
+          if (safeMonth === inputMonth) {
               stats.total++;
               if (r.status === 'draft') stats.draft++;
               if (r.status === 'submitted') stats.submitted++;
@@ -1051,7 +1068,7 @@
       document.getElementById('statDraft').innerText = stats.draft;
       document.getElementById('statSub').innerText = stats.submitted;
       document.getElementById('statApp').innerText = stats.approved;
-      document.getElementById('dashMonth').innerText = formatThaiMonthYear(inputMonth);
+      document.getElementById('dashMonth').innerText = formatThaiMonthYear(inputMonth) || 'ทั้งหมด';
     }
 
     // ================= ADVANCED ATTACHMENT HANDLING =================
